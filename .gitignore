@@ -1,10 +1,12 @@
-# .gitignore
-
 # Python
 __pycache__/
 *.py[cod]
-venv/
+venv-linux*/
 .env*
+*credentials/**
+.idea/
+cache/
+
 
 # VSCode
 .vscode/
