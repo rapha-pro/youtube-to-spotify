@@ -1,11 +1,13 @@
 # Python
 __pycache__/
 *.py[cod]
-venv-linux*/
+venv*/
 .env*
 *credentials/**
 .idea/
+*cache*
 cache/
+logs/
 
 
 # VSCode

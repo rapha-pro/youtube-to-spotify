@@ -1,6 +1,6 @@
 import os
-import spotify
-from spotify.oath2 import SpotifyOAuth
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 
 
@@ -8,7 +8,7 @@ load_dotenv()
 
 # Create Spotify client using OAuth
 def get_spotify_client():
-    sp = spotify.Spotify(auth_manager=SpotifyOAuth(
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
         client_id=os.getenv("SPOTIFY_CLIENT_ID"),
         client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
         redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
@@ -23,7 +23,7 @@ def create_playlist(sp, name="Youtube Playlist", isPublic=False):
     user_id = sp.me()['id']
     playlists = sp.current_user_playlists(limit=50)['items']
 
-    # check if playlist already exists
+    # return the playlist if it already exists
     for pl in playlists:
         if pl['name'] == name:
             return pl['id']
@@ -35,7 +35,7 @@ def create_playlist(sp, name="Youtube Playlist", isPublic=False):
     return new_playlist['id']
 
 
-# Search for a song on Spotify and return the track ID
+# Search for a song on Spotify and return the track id
 def search_track(sp, title):
     results = sp.search(q=title, limit=1, type="track")
     tracks = results.get('tracks', {}).get('items', [])
@@ -51,3 +51,5 @@ def add_tracks_to_playlist(sp, playlist_id, track_ids):
 
     for i in range(0, len(track_ids), 100):
         sp.playlist_add_items(playlist_id, track_ids[i:i + 100])
+
+    return 0
