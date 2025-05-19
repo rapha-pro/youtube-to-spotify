@@ -8,7 +8,6 @@ from spotify_api import (
     search_track,
     add_tracks_to_playlist,
 )
-
 from rich.progress import Progress
 from rich.console import Console
 from rich.panel import Panel
@@ -26,6 +25,7 @@ def main():
     playlist_id = extract_playlist_id(yt_url)
 
     console.rule("[bold cyan]YT → Spotify Playlist Transfer")
+    log_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Step 1: Get YouTube Titles
     console.print("[bold yellow]🔍 Fetching video titles from YouTube...")
@@ -35,14 +35,16 @@ def main():
     # Step 2: Spotify Auth
     sp = get_spotify_client()
     playlist_name = "YT Playlist Transfer"
-    spotify_playlist_id = create_playlist(sp, name=playlist_name)
+    playlist_description = f"{playlist_name} created on {log_timestamp}"
+    spotify_playlist_id = create_playlist(sp, name=playlist_name, description=playlist_description)
     console.print(f"[bold magenta]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")
+
 
     # Step 3: Search & Match tracks
     track_ids = []
     unmatched_titles = []
 
-    # Create the Log directory if it doesn't exist
+    # Create the Log directory if it does not exist
     log_dir = Path("logs")
     log_dir.mkdir(parents=True, exist_ok=True)
     unmatched_file = log_dir / f"unmatched_songs_for_{playlist_name.replace(' ', '_')}.txt"
@@ -74,10 +76,12 @@ def main():
     else:
         console.print("[green]✅ All songs matched successfully!")
 
-    # === Step 5: Add Tracks
+
+    # Step 5: Add Tracks
     console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
     add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
     console.print("[bold green]🎉 Playlist transfer complete!")
+
 
     # Step 6: Summary (on Terminal)
     console.print("\n[bold blue]📊 Transfer Summary:\n")
@@ -95,8 +99,7 @@ def main():
     console.rule("[bold green]✅ All Done!")
 
     # 6b: Save stats to log file
-    log_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_file = log_dir / f"{playlist_name}_log.txt"
+    log_file = log_dir / f"{playlist_name.replace(' ', '_')}_log.txt"
 
     with log_file.open("a", encoding="utf-8") as f:
         f.write("=== Playlist Transfer Summary ===\n")
@@ -108,8 +111,18 @@ def main():
         f.write("=" * 33 + "\n\n")
 
 
-def extract_playlist_id(url):
-    match = re.search(r"list=([a-zA-Z0-9_-]+)", url)
+def extract_playlist_id(youtube_url: str) -> str:
+    """
+    Extracts the playlist ID from a YouTube URL.
+
+    Args:
+        youtube_url (str): The full YouTube playlist URL.
+
+    Returns:
+        str: The playlist ID (value after 'list=').
+    """
+
+    match = re.search(r"list=([a-zA-Z0-9_-]+)", youtube_url)
     if match:
         return match.group(1)
     raise ValueError("Invalid YouTube playlist URL")

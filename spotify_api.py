@@ -1,42 +1,105 @@
 import os
 import spotipy
+from rich import print
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 
 
 load_dotenv()
 
-# Create Spotify client using OAuth
-def get_spotify_client():
+def get_spotify_client(scope: str = None) -> spotipy.Spotify:
+    """
+    Authenticates and returns a Spotipy client instance.
+
+    Args:
+        scope (str): The Spotify OAuth scopes as a space-separated string.
+
+    Returns:
+        spotipy.Spotify: Authenticated Spotify client.
+    """
+
+    if scope is None:
+        scope = os.getenv("SPOTIFY_SCOPE")
+
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
         client_id=os.getenv("SPOTIFY_CLIENT_ID"),
         client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
         redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-        scope=os.getenv("SPOTIFY_SCOPE")
+        scope=scope
     ))
 
     return sp
 
 
-# Create a new playlist or return the playlist_id if it exists
-def create_playlist(sp, name="Youtube Playlist", isPublic=False):
-    user_id = sp.me()['id']
-    playlists = sp.current_user_playlists(limit=50)['items']
+def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> str | None:
+    """
+    Checks if a playlist with the given name already exists.
 
-    # return the playlist if it already exists
-    for pl in playlists:
-        if pl['name'] == name:
-            return pl['id']
+    Args:
+        sp (spotipy.Spotify): Authenticated Spotify client.
+        user_id (str): id of the user
+        name (str): The name of the playlist to look for.
 
+    Returns:
+        str | None: The ID of the playlist if found, otherwise None.
+    """
+
+    user_id = sp.me()["id"]
+    limit = 10
+    offset = 0
+
+    while True:
+        playlists = sp.current_user_playlists(limit=limit, offset=offset)
+        for playlist in playlists["items"]:
+            print(f"Printing user {user_id} playlists: - {playlist['name']}-{playlist['id']}")
+            if playlist["name"].lower() == name.lower() and playlist["owner"]["id"] == user_id:
+                return playlist["id"]
+
+        if playlists["next"]:
+            offset += limit
+        else:
+            break
+
+    return None
+
+
+def create_playlist(sp: spotipy.Spotify, name: str, isPublic=False, description: str = "") -> str:
+    """
+    Creates a new playlist or reuses existing one with same name
+
+    Args:
+        sp (spotipy.Spotify): The authenticated Spotify client.
+        name (str): The name of the playlist.
+        isPublic (bool): access level of the playlist
+        description (str): (Optional) Description for the playlist.
+
+    Returns:
+        str: The Spotify playlist ID.
+    """
+
+    user_id = sp.me()["id"]
+    existing_id = get_existing_playlist_id(sp, user_id, name)
+    if existing_id:
+        print(f"[bold yellow]Playlist '{name}' already exists. Using existing playlist.[/bold yellow]\n")
+        return existing_id
 
     # create the playlist
-    new_playlist = sp.user_playlist_create(user=user_id, name=name, public=isPublic)
+    new_playlist = sp.user_playlist_create(user=user_id, name=name, public=isPublic, description=description)
+    return new_playlist["id"]
 
-    return new_playlist['id']
 
+def search_track(sp: spotipy.Spotify, title: str) -> str | None:
+    """
+    Searches for a song on Spotify using a given title.
 
-# Search for a song on Spotify and return the track id
-def search_track(sp, title):
+    Args:
+        sp (spotipy.Spotify): The authenticated Spotify client.
+        title (str): The YouTube video title to search for.
+
+    Returns:
+        str | None: The Spotify track ID if found, else None.
+    """
+
     results = sp.search(q=title, limit=1, type="track")
     tracks = results.get('tracks', {}).get('items', [])
     if tracks:
@@ -46,10 +109,19 @@ def search_track(sp, title):
 
 
 # Add tracks to playlist in batch
-def add_tracks_to_playlist(sp, playlist_id, track_ids):
+def add_tracks_to_playlist(sp: spotipy.Spotify, playlist_id: str, track_ids: list[str]) -> None:
+    """
+    Adds a list of track IDs to a specified Spotify playlist.
+
+    Args:
+        sp (spotipy.Spotify): The authenticated Spotify client.
+        playlist_id (str): The ID of the target playlist.
+        track_ids (list[str]): A list of Spotify track IDs to add.
+    """
+
     track_ids = list(filter(None, set(track_ids)))
 
     for i in range(0, len(track_ids), 100):
         sp.playlist_add_items(playlist_id, track_ids[i:i + 100])
 
-    return 0
+    return
