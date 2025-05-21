@@ -42,7 +42,7 @@ yarn-error.log*
 __pycache__/
 *.py[cod]
 venv*/
-backend/credentials/**
+**/credentials/**
 .idea/
 *cache*
 backend/cache/
