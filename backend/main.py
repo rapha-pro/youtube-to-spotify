@@ -14,13 +14,34 @@ from rich.panel import Panel
 from rich.table import Table
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 
 
 load_dotenv()
 console = Console()
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Transfer YouTube playlist to Spotify")
+    parser.add_argument(
+        "--playlist",
+        type=str,
+        default="YT Playlist Transfer",
+        help="Name of the Spotify playlist to create or update."
+    )
+    parser.add_argument("--public", action="store_true", help="Make the Spotify playlist public")
+    parser.add_argument("--dry-run", action="store_true", help="Simulate the playlist transfer without modifying Spotify, just show stats")
+
+    return parser.parse_args()
+
+
 def main():
+    # Setup
+    args = parse_args()
+    playlist_name = args.playlist
+    is_public = args.public
+    dry_run = args.dry_run
+
     yt_url = os.getenv("YOUTUBE_PLAYLIST_URL")
     playlist_id = extract_playlist_id(yt_url)
 
@@ -34,9 +55,8 @@ def main():
 
     # Step 2: Spotify Auth
     sp = get_spotify_client()
-    playlist_name = "YT Playlist Transfer"
     playlist_description = f"{playlist_name} created on {log_timestamp}"
-    spotify_playlist_id = create_playlist(sp, name=playlist_name, description=playlist_description)
+    spotify_playlist_id = create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
     console.print(f"[bold magenta]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")
 
 
@@ -78,8 +98,11 @@ def main():
 
 
     # Step 5: Add Tracks
-    console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
-    add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
+    if dry_run:
+        console.print("\n[bold yellow]➕ Dry run: Adding tracks to Spotify playlist...")
+    else:
+        console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
+        add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
     console.print("[bold green]🎉 Playlist transfer complete!")
 
 
@@ -90,10 +113,10 @@ def main():
     summary_table.add_column("Metric", style="cyan", no_wrap=True)
     summary_table.add_column("Value", style="magenta")
 
-    summary_table.add_row("- Total YouTube Videos", str(len(titles)))
-    summary_table.add_row("- Matched on Spotify", str(len(track_ids)))
-    summary_table.add_row("- Unmatched", str(len(unmatched_titles)))
-    summary_table.add_row("- Playlist Name", playlist_name)
+    summary_table.add_row("• Total YouTube Videos", str(len(titles)))
+    summary_table.add_row("• Matched on Spotify", str(len(track_ids)))
+    summary_table.add_row("• Unmatched", str(len(unmatched_titles)))
+    summary_table.add_row("• Playlist Name", playlist_name)
 
     console.print(summary_table)
     console.rule("[bold green]✅ All Done!")

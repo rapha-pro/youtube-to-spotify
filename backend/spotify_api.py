@@ -51,7 +51,6 @@ def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> st
     while True:
         playlists = sp.current_user_playlists(limit=limit, offset=offset)
         for playlist in playlists["items"]:
-            print(f"Printing user {user_id} playlists: - {playlist['name']}-{playlist['id']}")
             if playlist["name"].lower() == name.lower() and playlist["owner"]["id"] == user_id:
                 return playlist["id"]
 
@@ -63,7 +62,7 @@ def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> st
     return None
 
 
-def create_playlist(sp: spotipy.Spotify, name: str, isPublic=False, description: str = "") -> str:
+def create_playlist(sp: spotipy.Spotify, name: str, isPublic=True, description: str = "") -> str:
     """
     Creates a new playlist or reuses existing one with same name
 

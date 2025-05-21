@@ -3,11 +3,11 @@ __pycache__/
 *.py[cod]
 venv*/
 .env*
-*credentials/**
+backend/credentials/**
 .idea/
 *cache*
-cache/
-logs/
+backend/cache/
+backend/logs/
 
 
 # VSCode
