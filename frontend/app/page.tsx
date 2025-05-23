@@ -1,7 +1,13 @@
 "use client";
 
-import { Hero, Features, HowItWorks, Testimonial, Footer } from '@/app/sections';
-
+import Header from '@/app/sections/Header';
+import Hero from '@/app/sections/Hero';
+import Features from '@/app/sections/Features';
+import HowItWorks from '@/app/sections/HowItWorks';
+import Testimonial from '@/app/sections/Testimonial';
+import Footer from '@/app/sections/Footer';
+import Faq from './sections/faq';
+import Cta from './sections/cta';
 
 export default function Home() {
   return (
@@ -10,6 +16,8 @@ export default function Home() {
       <Features />
       <HowItWorks />
       <Testimonial />
+      <Faq />
+      <Cta />
       <Footer />
     </div>
   );

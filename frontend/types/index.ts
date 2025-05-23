@@ -1,33 +1,33 @@
 // This file exports TypeScript types and interfaces used throughout the application to ensure type safety.
 
 import { SVGProps } from "react";
+import { LucideIcon } from 'lucide-react';
+import { SpotifyIcon } from "@/components/icons";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
-export interface ButtonProps {
-  color?: string;
-  variant?: string;
-  size?: string;
-  className?: string;
-  onClick?: () => void;
-  children: React.ReactNode;
-}
-
-export interface CardProps {
+export interface FeatureCardProps {
+  id: string;
+  icon: LucideIcon | typeof SpotifyIcon;
+  iconColor: string;
+  bgColor: string;
   title: string;
   description: string;
-  className?: string;
 }
 
-export interface TestimonialProps {
-  name: string;
-  feedback: string;
-  avatarUrl?: string;
+export interface FaqItemProps {
+  id: string;
+  question: string;
+  answer: string;
 }
 
-export interface FeatureProps {
-  title: string;
-  description: string;
+export interface FaqCardProps {
+  faq: FaqItemProps;
+}
+
+export interface areaProps {
+  width?: number;
+  height?: number;
 }

@@ -21,6 +21,9 @@ export const siteConfig = {
     }
   ],
   links: {
-    github: "https://github.com/yourusername/youtube-to-spotify",
+    github: "https://github.com/rapha-pro/youtube-to-spotify",
   }
 };
+
+
+export const successfullTransferPercent = 95;

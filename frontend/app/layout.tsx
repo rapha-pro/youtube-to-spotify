@@ -4,8 +4,8 @@ import clsx from "clsx";
 
 import { Providers } from "./providers";
 
-import { siteConfig } from "@/config/site";
-import { fontSans } from "@/config/fonts";
+import { siteConfig } from "@/utils/site";
+import { fontSans } from "@/utils/fonts";
 import Header from "./sections/Header";
 
 export const metadata: Metadata = {
