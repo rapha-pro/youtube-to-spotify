@@ -34,7 +34,7 @@ This repository is currently a work in progress.
 - [Python](https://www.python.org/)
 - [Spotipy](https://spotipy.readthedocs.io/)
 - [Google API Client](https://github.com/googleapis/google-api-python-client)
-- [Rich](https://rich.readthedocs.io/) (for beautiful CLI output)
+- [Rich](https://rich.readthedocs.io/)
 
 ---
 
