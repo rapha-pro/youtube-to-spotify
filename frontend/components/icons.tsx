@@ -185,3 +185,30 @@ export const SearchIcon = (props: IconSvgProps) => (
     />
   </svg>
 );
+
+
+export const SpotifyIcon = ({ 
+  size = 24, 
+  className = "", 
+  ...props 
+
+}: IconSvgProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="M8 11.8a6 6 0 0 1 8 0" />
+    <path d="M9 15a3 3 0 0 1 6 0" />
+    <path d="M7 8.6a8 8 0 0 1 10 0" />
+  </svg>
+);

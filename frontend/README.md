@@ -1,53 +1,64 @@
-# Next.js & HeroUI Template
+# Syncwave Project
 
-This is a template for creating applications using Next.js 14 (app directory) and HeroUI (v2).
+Syncwave is a web application that allows users to seamlessly transfer their music playlists between YouTube and Spotify. This project is built using Next.js and TypeScript, providing a modern and efficient user experience.
 
-[Try it on CodeSandbox](https://githubbox.com/heroui-inc/heroui/next-app-template)
+## Features
 
-## Technologies Used
+- **User Authentication**: Login with your YouTube and Spotify accounts to access your playlists.
+- **Playlist Transfer**: Easily transfer playlists from YouTube to Spotify with just a few clicks.
+- **Fast and Reliable**: Optimized algorithms ensure quick and accurate playlist matching.
+- **User-Friendly Interface**: Intuitive design for a smooth user experience.
 
-- [Next.js 14](https://nextjs.org/docs/getting-started)
-- [HeroUI v2](https://heroui.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [next-themes](https://github.com/pacocoursey/next-themes)
+## Project Structure
 
-## How to Use
-
-### Use the template with create-next-app
-
-To create a new project based on this template using `create-next-app`, run the following command:
-
-```bash
-npx create-next-app -e https://github.com/heroui-inc/next-app-template
+```
+frontend
+├── app
+│   ├── page.tsx
+│   └── sections
+│       ├── Header.tsx
+│       ├── Hero.tsx
+│       ├── Features.tsx
+│       ├── HowItWorks.tsx
+│       ├── Testimonial.tsx
+│       └── Footer.tsx
+├── components
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   └── Icons
+│       ├── SpotifyIcon.tsx
+│       └── YoutubeIcon.tsx
+├── types
+│   └── index.ts
+└── README.md
 ```
 
-### Install dependencies
+## Getting Started
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+To get started with the project, follow these steps:
 
-```bash
-npm install
-```
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd frontend
+   ```
 
-### Run the development server
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-```
+3. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
 
-### Setup pnpm (optional)
+4. **Open your browser** and navigate to `http://localhost:3000` to view the application.
 
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+## Contributing
 
-```bash
-public-hoist-pattern[]=*@heroui/*
-```
-
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
+Contributions are welcome! If you have suggestions for improvements or new features, please open an issue or submit a pull request.
 
 ## License
 
-Licensed under the [MIT license](https://github.com/heroui-inc/next-app-template/blob/main/LICENSE).
+This project is licensed under the MIT License. See the LICENSE file for more details.
