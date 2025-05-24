@@ -66,7 +66,7 @@ export default function Header() {
 				</div>
 
 				<Button color="success" variant="shadow" as={Link} href="#get-started">
-					Get Started
+					Get Start
 				</Button>
 			</div>
 		</header>

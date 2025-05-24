@@ -1,6 +1,7 @@
 import { Music, Youtube as YoutubeIcon } from "lucide-react";
 import { SpotifyIcon } from "@/components/icons";
 import { Link } from "@heroui/react";
+import { siteConfig } from "@/utils/site";
 
 
 export default function Footer() {
@@ -22,15 +23,15 @@ export default function Footer() {
           </div>
 
           <div className="flex gap-6 items-center mb-6 md:mb-0">
-            <Link href="#features" className="text-gray-400 hover:text-white transition-colors">
-              Features
-            </Link>
-            <Link href="#how-it-works" className="text-gray-400 hover:text-white transition-colors">
-              How It Works
-            </Link>
-            <Link href="#faq" className="text-gray-400 hover:text-white transition-colors">
-              FAQ
-            </Link>
+            {siteConfig.navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div className="flex gap-4">
