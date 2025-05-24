@@ -1,6 +1,8 @@
 import { Music, Youtube as YoutubeIcon } from "lucide-react";
 import { SpotifyIcon } from "@/components/icons";
 import { Link } from "@heroui/react";
+import { siteConfig } from "@/utils/site";
+import Logo from "@/components/logo";
 
 
 export default function Footer() {
@@ -9,28 +11,18 @@ export default function Footer() {
     <footer className="py-12 bg-gray-900 border-t border-gray-800">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center gap-2 mb-6 md:mb-0">
-            <div className="relative h-8 w-8">
-              <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-purple-600 rounded-full"></div>
-              <div className="absolute inset-[2px] bg-gray-900 rounded-full flex items-center justify-center">
-                <Music size={16} className="text-white" />
-              </div>
-            </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-purple-500">
-              Syncwave
-            </h1>
-          </div>
+          <Logo classname="mb-6 md:mb-0"/>
 
           <div className="flex gap-6 items-center mb-6 md:mb-0">
-            <Link href="#features" className="text-gray-400 hover:text-white transition-colors">
-              Features
-            </Link>
-            <Link href="#how-it-works" className="text-gray-400 hover:text-white transition-colors">
-              How It Works
-            </Link>
-            <Link href="#faq" className="text-gray-400 hover:text-white transition-colors">
-              FAQ
-            </Link>
+            {siteConfig.navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div className="flex gap-4">
