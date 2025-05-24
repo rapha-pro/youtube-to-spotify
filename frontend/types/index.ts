@@ -31,3 +31,10 @@ export interface areaProps {
   width?: number;
   height?: number;
 }
+
+export interface LogoProps {
+  width?: number;
+  height?: number;
+  classname?: string;
+  size?: number;
+}
