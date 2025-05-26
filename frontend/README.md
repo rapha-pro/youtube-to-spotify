@@ -50,7 +50,7 @@ To get started with the project, follow these steps:
 
 3. **Run the development server**:
    ```bash
-   pnpm run dev
+   pnpm dev
    ```
 
 4. **Open your browser** and navigate to `http://localhost:3000` to view the application.
