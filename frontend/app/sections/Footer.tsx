@@ -1,8 +1,9 @@
-import { Music, Youtube as YoutubeIcon } from "lucide-react";
+import { TvMinimalPlay } from "lucide-react";
 import { SpotifyIcon } from "@/components/icons";
 import { Link } from "@heroui/react";
 import { siteConfig } from "@/utils/site";
 import Logo from "@/components/logo";
+import Phone from "@/components/phone";
 
 
 export default function Footer() {
@@ -11,8 +12,13 @@ export default function Footer() {
     <footer className="py-12 bg-gray-900 border-t border-gray-800">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <Logo classname="mb-6 md:mb-0"/>
-
+              <Link
+                href="/"
+                aria-label="Syncwave"
+                classname="mb-6 md:mb-0"
+              >
+                <Logo showText={false} />
+              </Link>
           <div className="flex gap-6 items-center mb-6 md:mb-0">
             {siteConfig.navItems.map((item) => (
               <Link
@@ -30,7 +36,7 @@ export default function Footer() {
               <SpotifyIcon className="text-green-400" size={20} />
             </a>
             <a href="#" className="h-10 w-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
-              <YoutubeIcon className="text-red-400" size={20} />
+              <TvMinimalPlay className="text-red-400" size={20} />
             </a>
           </div>
         </div>

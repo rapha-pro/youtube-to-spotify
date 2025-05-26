@@ -4,7 +4,7 @@ import { LogoProps } from "@/types";
 import { siteConfig } from "@/utils/site";
 
 export default function Logo(LogoProps: LogoProps) {
-  const { width = 8, height = 8, classname = "", size = 16 } = LogoProps;
+  const { width = 8, height = 8, classname = "", size = 16, showText = true } = LogoProps;
 
   return (
     <div className={`flex items-center gap-2 ${classname}`}>
@@ -14,9 +14,11 @@ export default function Logo(LogoProps: LogoProps) {
           <Music className="text-white" size={`${size}`} />
         </div>
       </div>
-      <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-purple-500">
-        {siteConfig.name}
-      </h1>
+      { showText && 
+        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-purple-500">
+          {siteConfig.name}
+        </h1>
+      }
     </div>
   );
 }

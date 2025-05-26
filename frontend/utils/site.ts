@@ -27,3 +27,4 @@ export const siteConfig = {
 
 
 export const successfullTransferPercent = 95;
+export const playlistDescription = "Summer vibe " +  new Date().getFullYear().toString();

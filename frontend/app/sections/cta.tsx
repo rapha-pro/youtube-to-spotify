@@ -1,5 +1,5 @@
 import { Button } from "@heroui/react";
-import { Youtube as YoutubeIcon } from "lucide-react";
+import { TvMinimalPlay } from "lucide-react";
 
 import { SpotifyIcon } from "@/components/icons";
 
@@ -34,7 +34,7 @@ export default function Cta() {
             color="danger"
             size="lg"
             startContent={
-              <YoutubeIcon
+              <TvMinimalPlay
                 className="group-hover:scale-110 transition-transform"
                 size={20}
               />
