@@ -1,8 +1,8 @@
 import os
 import re
 from dotenv import load_dotenv
-from youtube_api import get_video_titles_from_playlist
-from spotify_api import (
+from backend.services.youtube_api import get_video_titles_from_playlist
+from backend.services.spotify_api import (
     get_spotify_client,
     create_playlist,
     search_track,
