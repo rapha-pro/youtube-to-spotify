@@ -24,7 +24,7 @@ This repository is currently a work in progress.
 ## 🛠 Tech Stack
 
 ### Frontend
-- [Next.js](https://nextjs.org/) (App Router)
+- [Next.js](https://nextjs.org/)
 - [React](https://react.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
