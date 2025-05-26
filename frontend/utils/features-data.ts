@@ -2,7 +2,7 @@ import {
   Music,
   Rocket,
   CheckCircle,
-  Youtube as YoutubeIcon,
+  TvMinimalPlay,
 } from "lucide-react";
 
 import { successfullTransferPercent } from "./site";
@@ -40,7 +40,7 @@ export const featuresData: FeatureCardProps[] = [
   },
   {
     id: "youtube-integration",
-    icon: YoutubeIcon,
+    icon: TvMinimalPlay,
     iconColor: "text-red-400",
     bgColor: "bg-red-900/30",
     title: "YouTube Integration",

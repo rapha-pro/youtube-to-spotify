@@ -36,7 +36,12 @@ export default function Header() {
       className="fixed top-0 w-full bg-black/80 backdrop-blur-md z-50 border-b border-gray-800"
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-		<Logo />
+		<Link
+            href="/"
+            aria-label="Syncwave"
+		>
+			<Logo />
+		</Link>
 
         <div className="hidden md:flex gap-6 items-center">
           {siteConfig.navItems.map((item) => (

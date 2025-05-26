@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Button } from "@heroui/react";
-import { Youtube as YoutubeIcon } from "lucide-react";
+import { TvMinimalPlay } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -90,7 +90,7 @@ export default function Hero() {
               color="danger"
               size="lg"
               startContent={
-                <YoutubeIcon
+                <TvMinimalPlay
                   className="group-hover:scale-110 transition-transform"
                   size={20}
                 />
