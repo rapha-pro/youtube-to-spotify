@@ -1,12 +1,14 @@
 import os
-import re
 from dotenv import load_dotenv
-from backend.services.youtube_api import get_video_titles_from_playlist
+from backend.services.youtube_api import (
+    get_video_titles_from_playlist, 
+    extract_playlist_id
+)
 from backend.services.spotify_api import (
     get_spotify_client,
-    create_playlist,
-    search_track,
-    add_tracks_to_playlist,
+    api_create_playlist,
+    api_search_track,
+    api_tracks_to_playlist,
 )
 from rich.progress import Progress
 from rich.console import Console
@@ -56,7 +58,7 @@ def main():
     # Step 2: Spotify Auth
     sp = get_spotify_client()
     playlist_description = f"{playlist_name} created on {log_timestamp}"
-    spotify_playlist_id = create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
+    spotify_playlist_id = api_create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
     console.print(f"[bold magenta]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")
 
 
@@ -74,7 +76,7 @@ def main():
     with Progress() as progress:
         task = progress.add_task("🔍 Matching tracks...", total=len(titles))
         for title in titles:
-            track_id = search_track(sp, title)
+            track_id = api_search_track(sp, title)
             if track_id:
                 track_ids.append(track_id)
             else:
@@ -102,7 +104,7 @@ def main():
         console.print("\n[bold yellow]➕ Dry run: Adding tracks to Spotify playlist...")
     else:
         console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
-        add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
+        api_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
     console.print("[bold green]🎉 Playlist transfer complete!")
 
 
@@ -132,23 +134,6 @@ def main():
         f.write(f"Unmatched: {len(unmatched_titles)}\n")
         f.write(f"Log Time: {log_timestamp}\n")
         f.write("=" * 33 + "\n\n")
-
-
-def extract_playlist_id(youtube_url: str) -> str:
-    """
-    Extracts the playlist ID from a YouTube URL.
-
-    Args:
-        youtube_url (str): The full YouTube playlist URL.
-
-    Returns:
-        str: The playlist ID (value after 'list=').
-    """
-
-    match = re.search(r"list=([a-zA-Z0-9_-]+)", youtube_url)
-    if match:
-        return match.group(1)
-    raise ValueError("Invalid YouTube playlist URL")
 
 
 

@@ -31,7 +31,7 @@ def get_spotify_client(scope: str = None) -> spotipy.Spotify:
     return sp
 
 
-def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> str | None:
+def api_get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> str | None:
     """
     Checks if a playlist with the given name already exists.
 
@@ -44,7 +44,7 @@ def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> st
         str | None: The ID of the playlist if found, otherwise None.
     """
 
-    user_id = sp.me()["id"]
+    user_id = sp.me()["id"]  # get the user id of the authenticated user
     limit = 10
     offset = 0
 
@@ -62,7 +62,7 @@ def get_existing_playlist_id(sp: spotipy.Spotify, user_id: str, name: str) -> st
     return None
 
 
-def create_playlist(sp: spotipy.Spotify, name: str, isPublic=True, description: str = "") -> str:
+def api_create_playlist(sp: spotipy.Spotify, name: str, isPublic: bool = True, description: str = "") -> str:
     """
     Creates a new playlist or reuses existing one with same name
 
@@ -76,8 +76,8 @@ def create_playlist(sp: spotipy.Spotify, name: str, isPublic=True, description: 
         str: The Spotify playlist ID.
     """
 
-    user_id = sp.me()["id"]
-    existing_id = get_existing_playlist_id(sp, user_id, name)
+    user_id = sp.me()["id"] 
+    existing_id = api_get_existing_playlist_id(sp, user_id, name)
     if existing_id:
         print(f"[bold yellow]Playlist '{name}' already exists. Using existing playlist.[/bold yellow]\n")
         return existing_id
@@ -87,7 +87,7 @@ def create_playlist(sp: spotipy.Spotify, name: str, isPublic=True, description: 
     return new_playlist["id"]
 
 
-def search_track(sp: spotipy.Spotify, title: str) -> str | None:
+def api_search_track(sp: spotipy.Spotify, title: str) -> str | None:
     """
     Searches for a song on Spotify using a given title.
 
@@ -108,7 +108,7 @@ def search_track(sp: spotipy.Spotify, title: str) -> str | None:
 
 
 # Add tracks to playlist in batch
-def add_tracks_to_playlist(sp: spotipy.Spotify, playlist_id: str, track_ids: list[str]) -> None:
+def api_add_tracks_to_playlist(sp: spotipy.Spotify, playlist_id: str, track_ids: list[str]) -> None:
     """
     Adds a list of track IDs to a specified Spotify playlist.
 
@@ -124,3 +124,39 @@ def add_tracks_to_playlist(sp: spotipy.Spotify, playlist_id: str, track_ids: lis
         sp.playlist_add_items(playlist_id, track_ids[i:i + 100])
 
     return
+
+
+
+def api_add_tracks_from_titles(
+    sp: spotipy.Spotify,
+    playlist_id: str,
+    titles: list[str]
+) -> dict:
+    """
+    Searches for each title and adds matching tracks to the playlist.
+
+    Args:
+        sp (spotipy.Spotify): The authenticated Spotify client.
+        playlist_id (str): The Spotify playlist ID.
+        titles (list[str]): List of song titles to search for and add.
+
+    Returns:
+        dict: Summary with added track IDs and unmatched titles.
+    """
+    track_ids = []
+    unmatched_titles = []
+
+    for title in titles:
+        track_id = api_search_track(sp, title)
+        if track_id:
+            track_ids.append(track_id)
+        else:
+            unmatched_titles.append(title)
+
+    if track_ids:
+        api_add_tracks_to_playlist(sp, playlist_id, track_ids)
+
+    return {
+        "added": track_ids,
+        "unmatched": unmatched_titles
+    }

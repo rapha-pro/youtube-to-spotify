@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import youtube, spotify, transfer
+from backend.api import youtube, spotify, transfer
 
 
 tags_metadata = [
@@ -31,7 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(youtube.router, prefix="/youtube", tags=["YouTube"])
-# app.include_router(spotify.router, prefix="/spotify", tags=["Spotify"])
+app.include_router(spotify.router, prefix="/spotify", tags=["Spotify"])
 # app.include_router(transfer.router, prefix="/transfer", tags=["Transfer"])
 
 @app.get("/")
