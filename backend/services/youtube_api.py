@@ -30,7 +30,7 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
     creds = None
 
     # Token cache file
-    token_path = "credentials/youtube_token.pickle"
+    token_path = "backend/credentials/youtube_token.pickle"
 
     # Load existing credentials if available
     if os.path.exists(token_path):
