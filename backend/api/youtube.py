@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Annotated
+from typing import Annotated
 from backend.services.youtube_api import (
     get_video_titles_from_playlist,
     extract_playlist_id
@@ -34,6 +34,6 @@ def fetch_titles(
             raise HTTPException(status_code=400, detail="Playlist id couldn't be extracted")
         
         titles = get_video_titles_from_playlist(playlist_id)
-        return {"titles": titles}
+        return {"status": "success", "titles": titles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
