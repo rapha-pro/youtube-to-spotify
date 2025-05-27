@@ -1,7 +1,9 @@
 import os
-import re
 from dotenv import load_dotenv
-from backend.services.youtube_api import get_video_titles_from_playlist
+from backend.services.youtube_api import (
+    get_video_titles_from_playlist, 
+    extract_playlist_id
+)
 from backend.services.spotify_api import (
     get_spotify_client,
     create_playlist,
@@ -132,23 +134,6 @@ def main():
         f.write(f"Unmatched: {len(unmatched_titles)}\n")
         f.write(f"Log Time: {log_timestamp}\n")
         f.write("=" * 33 + "\n\n")
-
-
-def extract_playlist_id(youtube_url: str) -> str:
-    """
-    Extracts the playlist ID from a YouTube URL.
-
-    Args:
-        youtube_url (str): The full YouTube playlist URL.
-
-    Returns:
-        str: The playlist ID (value after 'list=').
-    """
-
-    match = re.search(r"list=([a-zA-Z0-9_-]+)", youtube_url)
-    if match:
-        return match.group(1)
-    raise ValueError("Invalid YouTube playlist URL")
 
 
 

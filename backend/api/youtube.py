@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Annotated
-from services.youtube_api import get_video_titles_from_playlist
+from backend.services.youtube_api import get_video_titles_from_playlist
 
 
 router = APIRouter()

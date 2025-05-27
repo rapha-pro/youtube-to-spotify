@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import youtube, spotify, transfer
+from backend.api import youtube, spotify, transfer
 
 
 tags_metadata = [
