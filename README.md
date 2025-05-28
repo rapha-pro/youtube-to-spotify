@@ -72,7 +72,7 @@ cd youtube-to-spotify
 ```
 
 
-### 2. Setup the backend (Python)
+### 2. Set up the backend (Python)
 ```
 cd backend
 python3 -m venv venv
