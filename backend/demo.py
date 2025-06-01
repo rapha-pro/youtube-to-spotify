@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from backend.services.youtube_api import (
+    get_authenticated_service,
     get_video_titles_from_playlist, 
     extract_playlist_id
 )
@@ -52,11 +53,18 @@ def main():
 
     # Step 1: Get YouTube Titles
     console.print("[bold yellow]🔍 Fetching video titles from YouTube...")
-    titles = get_video_titles_from_playlist(playlist_id)
+    youtube = get_authenticated_service()
+    if not youtube:
+        console.print("[bold red]❌ Failed to authenticate with YouTube. Check your credentials.[/bold red]")
+        return
+    titles = get_video_titles_from_playlist(youtube, playlist_id)
     console.print(f"[green]✅ {len(titles)} titles fetched.\n")
 
     # Step 2: Spotify Auth
     sp = get_spotify_client()
+    if not sp:
+        console.print("[bold red]❌ Failed to authenticate with Spotify. Check your credentials.[/bold red]")
+        return
     playlist_description = f"{playlist_name} created on {log_timestamp}"
     spotify_playlist_id = api_create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
     console.print(f"[bold magenta]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")

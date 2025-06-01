@@ -6,7 +6,7 @@ from googleapiclient.discovery import build, Resource
 from google.auth.transport.requests import Request
 from dotenv import load_dotenv
 from pathlib import Path
-import re
+from urllib.parse import urlparse, parse_qs
 
 
 load_dotenv()
@@ -53,7 +53,10 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
 
 
 
-def get_video_titles_from_playlist(playlist_id: str) -> list[str]:
+def get_video_titles_from_playlist(
+    youtube: Resource,
+    playlist_id: str
+) -> list[str]:
     """
         Fetches video titles from a YouTube playlist.
 
@@ -66,8 +69,6 @@ def get_video_titles_from_playlist(playlist_id: str) -> list[str]:
 
     cache_dir = Path("cache") / f"youtube_raw_{playlist_id}"
     os.makedirs(cache_dir, exist_ok=True)
-
-    youtube = get_authenticated_service()
 
     titles = []
     next_page_token = None
@@ -114,8 +115,10 @@ def extract_playlist_id(playlist_url: str) -> str:
     Raises:
         ValueError: If the URL does not contain a valid playlist ID.
     """
-    match = re.search(r"list=([a-zA-Z0-9_-]+)", playlist_url)
-    if match:
-        return match.group(1)
-    else:
-        raise ValueError("Invalid YouTube playlist URL. Couldn't extract playlist ID.")
+    parsed = urlparse(playlist_url)
+    query = parse_qs(parsed.query)
+    playlist_id = query.get("list", [None])[0]
+    if not playlist_id:
+        raise ValueError("Invalid YouTube playlist URL.")
+    
+    return playlist_id

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Annotated
 from backend.services.youtube_api import (
+    get_authenticated_service,
     get_video_titles_from_playlist,
     extract_playlist_id
 )
@@ -33,7 +34,11 @@ def fetch_titles(
         if not playlist_id:
             raise HTTPException(status_code=400, detail="Playlist id couldn't be extracted")
         
-        titles = get_video_titles_from_playlist(playlist_id)
+        youtube = get_authenticated_service()
+        if not youtube:
+            raise HTTPException(status_code=500, detail="YouTube API client not authenticated")
+        
+        titles = get_video_titles_from_playlist(youtube, playlist_id)
         return {"status": "success", "titles": titles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
