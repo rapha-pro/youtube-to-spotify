@@ -7,11 +7,13 @@ import Hero from "@/app/sections/Hero";
 import HowItWorks from "@/app/sections/HowItWorks";
 import Testimonial from "@/app/sections/Testimonial";
 import Footer from "@/app/sections/Footer";
+import GetStarted from "@/components/get-started/get-started";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white overflow-x-hidden">
       <Hero />
+      <GetStarted  />
       <Features />
       <HowItWorks />
       <Testimonial />
