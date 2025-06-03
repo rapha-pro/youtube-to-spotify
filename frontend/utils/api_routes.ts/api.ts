@@ -1,12 +1,11 @@
 import axios from "axios";
-import { config } from './config';
+import { config } from "../config";
 
 import {
   PlaylistTransferRequestProps,
   TransferProgressResponseProps,
   TransferResultResponseProps,
 } from "@/types";
-
 
 
 const API_BASE_URL = config.apiBaseUrl;

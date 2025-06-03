@@ -2,29 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
+import Link from "next/link";
+
 import { ArrowLeft } from "lucide-react";
 import { gsap } from "gsap";
-import { useRouter } from "next/navigation";
-
 import PlaylistForm from "@/components/get-started/playlistForm";
 import TransferProgress from "@/components/get-started/transferProgress";
 import TransferResults from "@/components/get-started/transferResults";
 import AnimatedBackground from "@/components/get-started/animatedBackground";
 import { transferAPI } from "@/utils/api_routes.ts/api";
-
-import { 
-    TransferResultResponseProps, 
-    PlaylistTransferRequestProps
+import {
+  TransferResultResponseProps,
+  PlaylistTransferRequestProps,
 } from "@/types";
 
 type TransferStep = "form" | "progress" | "results";
 
 export default function GetStarted() {
-  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState<TransferStep>("form");
   const [playlistData, setPlaylistData] =
-    useState<PlaylistTransferRequestProps| null>(null);
+    useState<PlaylistTransferRequestProps | null>(null);
   const [transferResults, setTransferResults] =
     useState<TransferResultResponseProps | null>(null);
   const [transferId, setTransferId] = useState<string | null>(null);
@@ -104,10 +102,6 @@ export default function GetStarted() {
     }
   };
 
-  const handleBackToHome = () => {
-    router.push("/");
-  };
-
   const handleStartOver = () => {
     setCurrentStep("form");
     setPlaylistData(null);
@@ -139,19 +133,20 @@ export default function GetStarted() {
       {/* Header */}
       <header className="page-header relative z-10 pt-8 pb-4 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Button
-            className="group mb-6"
-            startContent={
-              <ArrowLeft
-                className="group-hover:-translate-x-1 transition-transform"
-                size={18}
-              />
-            }
-            variant="ghost"
-            onPress={handleBackToHome}
-          >
-            Back to Home
-          </Button>
+          <Link href="/">
+            <Button
+              className="group mb-6"
+              startContent={
+                <ArrowLeft
+                  className="group-hover:-translate-x-1 transition-transform"
+                  size={18}
+                />
+              }
+              variant="ghost"
+            >
+              Back to Home
+            </Button>
+          </Link>
 
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">

@@ -15,9 +15,8 @@ export default function Footer() {
               <Link
                 href="/"
                 aria-label="Syncwave"
-                classname="mb-6 md:mb-0"
               >
-                <Logo showText={false} />
+                <Logo showText={false} classname="mb-6 md:mb-0"/>
               </Link>
           <div className="flex gap-6 items-center mb-6 md:mb-0">
             {siteConfig.navItems.map((item) => (
