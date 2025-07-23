@@ -21,7 +21,7 @@ This repository is currently a work in progress.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - [Next.js](https://nextjs.org/)
@@ -40,7 +40,7 @@ This repository is currently a work in progress.
 
 ## Project Structure
 ```bash
-📦 youtube-to-spotify/
+youtube-to-spotify/
 ├── backend/
 │   ├── youtube_api.py
 │   ├── spotify_api.py
