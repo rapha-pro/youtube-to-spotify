@@ -12,6 +12,10 @@ tags_metadata = [
         "name": "Spotify",
         "description": "Endpoints to interact with Spotify"
     },
+    {
+        "name": "Transfer",
+        "description": "Transfer playlists between YouTube and Spotify. This includes creating new playlists, searching for tracks, and adding them to Spotify playlists."
+    },
 ]
 
 app = FastAPI(

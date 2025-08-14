@@ -46,51 +46,43 @@ api.interceptors.response.use(
  * @throws Error if the transfer fails
  */
 export const transferAPI = {
-  // Direct transfer to match backend endpoint
+  // Direct transfer using POST with enhanced backend
   directTransfer: async (
     data: PlaylistTransferRequestProps,
   ): Promise<TransferResultResponseProps> => {
+    console.log("Sending transfer request:", data);
 
-    // Convert POST data to GET query parameters to match backend
-    const params = new URLSearchParams({
+    const response = await api.post("/transfer", {
       playlist_url: data.url,
       playlist_name: data.name,
-      is_public: data.isPublic.toString(),
+      is_public: data.isPublic,
       description: data.description || "",
     });
 
-    const response = await api.post(`/transfer?${params.toString()}`);
+    console.log("📦 Backend response:", response.data);
 
-    // Transform backend response to match our expected format
+    // Backend now returns the exact format we need!
+    const backendData = response.data;
+
     return {
-      playlistId: response.data.playlist_id || "unknown",
-      playlistUrl: response.data.playlist_url || "#",
-      totalSongs: response.data.total_songs || 0,
-      transferredSongs: response.data.matched_titles?.length || 0,
-      failedSongs: response.data.unmatched_titles?.length || 0,
-      songs: [
-        // Map matched songs
-        ...(response.data.matched_titles || []).map(
-          (title: string, index: number) => ({
-            id: `matched-${index}`,
-            title: title,
-            artist: "Unknown Artist", // backend doesn't return artist info
-            status: "success" as const,
-            spotifyUrl: "#", // backend doesn't return individual URLs
-          }),
-        ),
-        // Map unmatched songs
-        ...(response.data.unmatched_titles || []).map(
-          (title: string, index: number) => ({
-            id: `unmatched-${index}`,
-            title: title,
-            artist: "Unknown Artist",
-            status: "failed" as const,
-          }),
-        ),
-      ],
-      transferDuration: 0, // backend doesn't return this
-      createdAt: new Date().toISOString(),
+      playlistId: backendData.playlist_id,
+      playlistUrl: backendData.playlist_url,
+      totalSongs: backendData.total_songs,
+      transferredSongs: backendData.transferred_songs,
+      failedSongs: backendData.failed_songs,
+      songs: backendData.songs.map((song: any) => ({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        thumbnail: song.thumbnail,
+        status: song.status,
+        spotifyUrl: song.spotify_url,
+        youtubeUrl: song.youtube_url,
+        error: song.error,
+      })),
+      transferDuration: backendData.transfer_duration,
+      createdAt: backendData.created_at,
     };
   },
 };

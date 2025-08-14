@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button, Link } from "@heroui/react";
-// import Link from "next/link";
-
+import { Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
 import { gsap } from "gsap";
+import { useRouter } from "next/navigation";
 
 import PlaylistForm from "@/components/get-started/playlistForm";
 import TransferProgress from "@/components/get-started/transferProgress";
@@ -21,14 +20,13 @@ import axios from "axios";
 type TransferStep = "form" | "progress" | "results";
 
 export default function GetStarted() {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState<TransferStep>("form");
-  const [playlistData, setPlaylistData] =
-    useState<PlaylistTransferRequestProps | null>(null);
-  const [transferResults, setTransferResults] =
-    useState<TransferResultResponseProps | null>(null);
-  const [transferId, setTransferId] = useState<string | null>(null);
+  const [playlistData, setPlaylistData] = useState<PlaylistTransferRequestProps | null>(null);
+  const [transferResults, setTransferResults] = useState<TransferResultResponseProps | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
     // Initial page animation
@@ -48,11 +46,19 @@ export default function GetStarted() {
     });
   }, []);
 
+  const handleBackToHome = () => {
+    // Add a small delay to ensure smooth transition
+    router.push("/");
+  };
+
   const handleFormSubmit = async (data: PlaylistTransferRequestProps) => {
     try {
       setError(null);
       setPlaylistData(data);
+      setIsTransferring(true);
       setCurrentStep("progress");
+
+      console.log("[get-started.tsx]Starting transfer with data:", data);
 
       // Call your backend's direct transfer endpoint
       const results = await transferAPI.directTransfer(data);
@@ -62,7 +68,7 @@ export default function GetStarted() {
       setTransferResults(results);
       setCurrentStep("results");
     } catch (error) {
-      console.error("❌ Transfer failed:", error);
+      console.error("[get-started]❌ Transfer failed:", error);
 
       if (axios.isAxiosError(error)) {
         const errorMessage =
@@ -76,6 +82,8 @@ export default function GetStarted() {
       }
 
       setCurrentStep("form");
+    } finally {
+      setIsTransferring(false);
     }
   };
 
@@ -83,8 +91,8 @@ export default function GetStarted() {
     setCurrentStep("form");
     setPlaylistData(null);
     setTransferResults(null);
-    setTransferId(null);
     setError(null);
+    setIsTransferring(false);
   };
 
   const getStepTitle = () => {
@@ -110,20 +118,19 @@ export default function GetStarted() {
       {/* Header */}
       <header className="page-header relative z-10 pt-8 pb-4 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Link href="/">
-            <Button
-              className="group mb-6"
-              startContent={
-                <ArrowLeft
-                  className="group-hover:-translate-x-1 transition-transform"
-                  size={18}
-                />
-              }
-              variant="ghost"
-            >
-              Back to Home
-            </Button>
-          </Link>
+          <Button
+            className="group mb-6"
+            variant="ghost"
+            startContent={
+              <ArrowLeft
+                className="group-hover:-translate-x-1 transition-transform"
+                size={18}
+              />
+            }
+            onPress={handleBackToHome}
+          >
+            Back to Home
+          </Button>
 
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
@@ -153,7 +160,7 @@ export default function GetStarted() {
           {currentStep === "progress" && playlistData && (
             <TransferProgress
               playlistData={playlistData}
-              transferId={transferId}
+              isTransferring={isTransferring}
             />
           )}
 

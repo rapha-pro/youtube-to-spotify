@@ -7,29 +7,27 @@ from google.auth.transport.requests import Request
 from dotenv import load_dotenv
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-
+from typing import List
+from backend.models.transfer import YouTubeVideo
 
 load_dotenv()
 
 def get_authenticated_service(scopes: list[str] = None) -> Resource:
     """
-        Authenticates and returns a YouTube API service instance.
+    Authenticates and returns a YouTube API service instance.
 
-        Args:
-            scopes (list[str]): A list of OAuth scopes required for the API access.
+    Args:
+        scopes (list[str]): A list of OAuth scopes required for the API access.
 
-        Returns:
-            Resource: Authenticated YouTube API client resource.
+    Returns:
+        Resource: Authenticated YouTube API client resource.
     """
 
     if scopes is None:
         scopes = [os.getenv("YOUTUBE_SCOPE")]
 
     client_secrets_file = os.getenv("YOUTUBE_CLIENT_JSON")
-
     creds = None
-
-    # Token cache file
     token_path = "backend/credentials/youtube_token.pickle"
 
     # Load existing credentials if available
@@ -40,7 +38,7 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
     # If no (valid) credentials, authenticate
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())  # refresh the token silently
+            creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
             creds = flow.run_local_server(port=8080)
@@ -52,25 +50,25 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
     return build("youtube", "v3", credentials=creds)
 
 
-
-def get_video_titles_from_playlist(
+def get_video_details_from_playlist(
     youtube: Resource,
     playlist_id: str
-) -> list[str]:
+) -> List[YouTubeVideo]:
     """
-        Fetches video titles from a YouTube playlist.
+    Fetches detailed video information from a YouTube playlist.
 
-        Args:
-            playlist_id (str): The YouTube playlist ID (the value after 'list=' in the URL).
+    Args:
+        youtube (Resource): Authenticated YouTube API service
+        playlist_id (str): The YouTube playlist ID
 
-        Returns:
-            list[str]: A list of video titles from the playlist.
+    Returns:
+        List[YouTubeVideo]: List of YouTube videos with full metadata
     """
 
     cache_dir = Path("cache") / f"youtube_raw_{playlist_id}"
     os.makedirs(cache_dir, exist_ok=True)
 
-    titles = []
+    videos = []
     next_page_token = None
     page = 1
 
@@ -83,14 +81,38 @@ def get_video_titles_from_playlist(
         )
         response = request.execute()
 
-        # Save api response for current page in cache dir
+        # Save API response for current page in cache dir
         cache_filename = cache_dir / f"page_{page}.json"
         with open(cache_filename, "w", encoding="utf-8") as file:
             json.dump(response, file, indent=4)
 
         for item in response["items"]:
-            title = item["snippet"]["title"]
-            titles.append(title)
+            snippet = item["snippet"]
+            
+            # Extract video ID from resourceId
+            video_id = snippet["resourceId"]["videoId"]
+            
+            # Get the best available thumbnail
+            thumbnails = snippet.get("thumbnails", {})
+            thumbnail_url = None
+            
+            # Prefer higher quality thumbnails
+            for quality in ["maxres", "standard", "high", "medium", "default"]:
+                if quality in thumbnails:
+                    thumbnail_url = thumbnails[quality]["url"]
+                    break
+
+            # Create YouTubeVideo object
+            video = YouTubeVideo(
+                video_id=video_id,
+                title=snippet["title"],
+                youtube_url=f"https://www.youtube.com/watch?v={video_id}",
+                thumbnail_url=thumbnail_url,
+                channel_title=snippet.get("channelTitle"),
+                video_owner_channel=snippet.get("videoOwnerChannelTitle")
+            )
+            
+            videos.append(video)
 
         next_page_token = response.get("nextPageToken")
         if not next_page_token:
@@ -98,8 +120,21 @@ def get_video_titles_from_playlist(
 
         page += 1
 
-    return titles
+    return videos
 
+
+def get_video_titles_from_playlist(
+    youtube: Resource,
+    playlist_id: str
+) -> list[str]:
+    """
+    Legacy function for backward compatibility.
+    Fetches only video titles from a YouTube playlist.
+    
+    Note: Consider using get_video_details_from_playlist() for richer data.
+    """
+    videos = get_video_details_from_playlist(youtube, playlist_id)
+    return [video.title for video in videos]
 
 
 def extract_playlist_id(playlist_url: str) -> str:

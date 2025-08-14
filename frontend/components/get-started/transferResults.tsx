@@ -9,10 +9,17 @@ import {
   RotateCcw,
   Share2,
   Music,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { gsap } from "gsap";
-import { TransferResultsProps } from "@/types";
 
+import { TransferResultResponseProps } from "@/types";
+
+interface TransferResultsProps {
+  results: TransferResultResponseProps;
+  onStartOver: () => void;
+}
 
 export default function TransferResults({
   results,
@@ -20,6 +27,7 @@ export default function TransferResults({
 }: TransferResultsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showAllSongs, setShowAllSongs] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     // Success animation
@@ -80,6 +88,37 @@ export default function TransferResults({
     }
   };
 
+  const handleSharePlaylist = async () => {
+    try {
+      await navigator.clipboard.writeText(results.playlistUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) {
+      return `${seconds.toFixed(1)}s`;
+    } else {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
+
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+
+      return date.toLocaleDateString() + " at " + date.toLocaleTimeString();
+    } catch {
+      return "Just now";
+    }
+  };
+
   const successRate = Math.round(
     (results.transferredSongs / results.totalSongs) * 100,
   );
@@ -100,6 +139,18 @@ export default function TransferResults({
         <p className="text-gray-400 text-lg">
           Your playlist has been successfully transferred to Spotify
         </p>
+
+        {/* Transfer Summary */}
+        <div className="mt-4 flex items-center justify-center gap-6 text-sm text-gray-400">
+          <div className="flex items-center gap-2">
+            <Clock size={16} />
+            <span>Completed in {formatDuration(results.transferDuration)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span>{formatDate(results.createdAt)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -172,12 +223,9 @@ export default function TransferResults({
             />
           }
           variant="bordered"
-          onPress={() => {
-            navigator.clipboard.writeText(results.playlistUrl);
-            // You could add a toast notification here
-          }}
+          onPress={handleSharePlaylist}
         >
-          Share Playlist
+          {copySuccess ? "Copied!" : "Share Playlist"}
         </Button>
 
         <Button
@@ -246,9 +294,14 @@ export default function TransferResults({
                   <p className="text-gray-400 text-sm truncate">
                     {song.artist}
                   </p>
+                  {song.album && (
+                    <p className="text-gray-500 text-xs truncate">
+                      {song.album}
+                    </p>
+                  )}
                 </div>
 
-                {/* Status */}
+                {/* Status and Actions */}
                 <div className="flex items-center gap-2">
                   {song.status === "success" ? (
                     <>
@@ -259,25 +312,70 @@ export default function TransferResults({
                       >
                         Added
                       </Chip>
-                      {song.spotifyUrl && (
+                      <div className="flex gap-1">
+                        {song.spotifyUrl && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            title="Open in Spotify"
+                            variant="ghost"
+                            onPress={() =>
+                              window.open(song.spotifyUrl, "_blank")
+                            }
+                          >
+                            <ExternalLink size={14} />
+                          </Button>
+                        )}
+                        {song.youtubeUrl && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            title="Open original YouTube video"
+                            variant="ghost"
+                            onPress={() =>
+                              window.open(song.youtubeUrl, "_blank")
+                            }
+                          >
+                            <svg
+                              fill="currentColor"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              width="14"
+                            >
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                            </svg>
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Chip
+                        className="bg-red-500/20 text-red-400"
+                        startContent={<XCircle size={14} />}
+                        variant="flat"
+                      >
+                        Not Found
+                      </Chip>
+                      {song.youtubeUrl && (
                         <Button
                           isIconOnly
                           size="sm"
+                          title="Open original YouTube video"
                           variant="ghost"
-                          onPress={() => window.open(song.spotifyUrl, "_blank")}
+                          onPress={() => window.open(song.youtubeUrl, "_blank")}
                         >
-                          <ExternalLink size={14} />
+                          <svg
+                            fill="currentColor"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            width="14"
+                          >
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                          </svg>
                         </Button>
                       )}
                     </>
-                  ) : (
-                    <Chip
-                      className="bg-red-500/20 text-red-400"
-                      startContent={<XCircle size={14} />}
-                      variant="flat"
-                    >
-                      Not Found
-                    </Chip>
                   )}
                 </div>
               </div>
@@ -289,11 +387,12 @@ export default function TransferResults({
               <Divider className="my-6 bg-gray-600" />
               <div className="text-center">
                 <p className="text-gray-400 text-sm mb-2">
-                  {results.failedSongs} songs couldn't be found on Spotify
+                  {results.failedSongs} songs couldn&apos;t be found on Spotify
                 </p>
                 <p className="text-gray-500 text-xs">
                   This usually happens when songs are not available in your
-                  region or have different titles
+                  region or have different titles. You can click the YouTube
+                  icon to find them manually.
                 </p>
               </div>
             </>
@@ -301,22 +400,49 @@ export default function TransferResults({
         </CardBody>
       </Card>
 
-      {/* Tips Card */}
+      {/* Performance Stats */}
       <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30">
+        <CardBody className="p-6">
+          <h4 className="text-lg font-semibold text-white mb-3">
+            Transfer Statistics
+          </h4>
+          <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
+            <div>
+              <p className="font-medium text-blue-400 mb-1">Processing Speed</p>
+              <p>
+                {(results.transferDuration / results.totalSongs).toFixed(1)}s
+                per song
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-green-400 mb-1">Match Accuracy</p>
+              <p>{successRate}% of songs found successfully</p>
+            </div>
+            <div>
+              <p className="font-medium text-purple-400 mb-1">Total Duration</p>
+              <p>{formatDuration(results.transferDuration)}</p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+
+      {/* Tips Card */}
+      <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/30">
         <CardBody className="p-6">
           <h4 className="text-lg font-semibold text-white mb-3">💡 Pro Tips</h4>
           <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-300">
             <div>
-              <p className="font-medium text-blue-400 mb-1">Missing songs?</p>
+              <p className="font-medium text-green-400 mb-1">Missing songs?</p>
               <p>
-                Try searching for them manually on Spotify - they might have
-                different titles or artists.
+                Click the YouTube icon next to failed songs to find and add them
+                manually to your Spotify playlist.
               </p>
             </div>
             <div>
-              <p className="font-medium text-purple-400 mb-1">Love the tool?</p>
+              <p className="font-medium text-blue-400 mb-1">Love the tool?</p>
               <p>
                 Share it with friends who also want to transfer their playlists!
+                The more the merrier.
               </p>
             </div>
           </div>

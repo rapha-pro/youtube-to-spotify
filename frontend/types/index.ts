@@ -1,12 +1,11 @@
-// This file exports TypeScript types and interfaces used throughout the application to ensure type safety.
-
+// types/index.ts (updated)
 import { SVGProps } from "react";
 import { LucideIcon } from 'lucide-react';
 import { SpotifyIcon } from "@/components/icons";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
-};
+}
 
 export interface FeatureCardProps {
   id: string;
@@ -15,22 +14,22 @@ export interface FeatureCardProps {
   bgColor: string;
   title: string;
   description: string;
-};
+}
 
 export interface FaqItemProps {
   id: string;
   question: string;
   answer: string;
-};
+}
 
 export interface FaqCardProps {
   faq: FaqItemProps;
-};
+}
 
 export interface areaProps {
   width?: number;
   height?: number;
-};
+}
 
 export interface LogoProps {
   width?: number;
@@ -39,7 +38,6 @@ export interface LogoProps {
   size?: number;
   showText?: boolean;
 }
-
 
 export interface PlaylistTransferRequestProps {
   url: string;
@@ -91,26 +89,13 @@ export interface PlaylistFormProps {
 }
 
 export interface TransferResultsProps {
-  results: {
-    playlistId: string;
-    playlistUrl: string;
-    totalSongs: number;
-    transferredSongs: number;
-    failedSongs: number;
-    songs: Array<{
-      id: string;
-      title: string;
-      artist: string;
-      thumbnail?: string;
-      status: "success" | "failed";
-      spotifyUrl?: string;
-    }>;
-  };
+  results: TransferResultResponseProps;
   onStartOver: () => void;
 }
 
 export interface TransferProgressProps {
-  playlistData: PlaylistDataProps;
+  playlistData: PlaylistTransferRequestProps;
+  isTransferring: boolean;
 }
 
 export interface ProgressStepProps {

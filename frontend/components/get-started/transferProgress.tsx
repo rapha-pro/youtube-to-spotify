@@ -5,16 +5,23 @@ import { Card, CardBody, Progress, Chip } from "@heroui/react";
 import { Music, Search, CheckCircle, Download, Loader2 } from "lucide-react";
 import { gsap } from "gsap";
 
-import { ProgressStepProps, TransferProgressProps } from "@/types";
+import { ProgressStepProps, PlaylistTransferRequestProps } from "@/types";
+
+interface TransferProgressProps {
+  playlistData: PlaylistTransferRequestProps;
+  isTransferring: boolean;
+}
 
 export default function TransferProgress({
   playlistData,
+  isTransferring,
 }: TransferProgressProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [foundSongs, setFoundSongs] = useState(0);
   const [totalSongs, setTotalSongs] = useState(0);
+  const [currentMessage, setCurrentMessage] = useState("Starting transfer...");
 
   const steps: ProgressStepProps[] = [
     {
@@ -70,56 +77,101 @@ export default function TransferProgress({
       delay: 0.3,
       ease: "power3.out",
     });
+  }, []);
 
-    // Simulate progress
+  useEffect(() => {
+    if (!isTransferring) return;
+
+    // Realistic progress simulation
+    const progressSteps = [
+      {
+        step: 0,
+        progress: 10,
+        message: "Extracting playlist ID from URL...",
+        duration: 1000,
+      },
+      {
+        step: 0,
+        progress: 25,
+        message: "Fetching YouTube video details...",
+        duration: 2000,
+      },
+      {
+        step: 1,
+        progress: 35,
+        message: "Analyzing video titles...",
+        duration: 1000,
+      },
+      {
+        step: 1,
+        progress: 50,
+        message: "Searching for songs on Spotify...",
+        duration: 3000,
+      },
+      {
+        step: 1,
+        progress: 75,
+        message: "Matching songs with high confidence...",
+        duration: 2000,
+      },
+      {
+        step: 2,
+        progress: 85,
+        message: "Creating Spotify playlist...",
+        duration: 1500,
+      },
+      {
+        step: 2,
+        progress: 95,
+        message: "Adding songs to playlist...",
+        duration: 2000,
+      },
+      {
+        step: 3,
+        progress: 100,
+        message: "Transfer completed successfully!",
+        duration: 500,
+      },
+    ];
+
+    let currentProgressIndex = 0;
+    let songCounter = 0;
+    const estimatedTotal = 25; // Estimated total songs
+
+    // Set initial total
+    setTotalSongs(estimatedTotal);
+
     const progressInterval = setInterval(() => {
-      setCurrentStepIndex((prev) => {
-        if (prev < steps.length - 1) {
-          return prev + 1;
-        }
+      if (currentProgressIndex >= progressSteps.length) {
         clearInterval(progressInterval);
+        return;
+      }
 
-        return prev;
-      });
-    }, 2000);
+      const currentProgressStep = progressSteps[currentProgressIndex];
 
-    // Simulate progress bar
-    const progressBarInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev < 100) {
-          return prev + Math.random() * 15;
-        }
-        clearInterval(progressBarInterval);
+      // Update step, progress, and message
+      setCurrentStepIndex(currentProgressStep.step);
+      setProgress(currentProgressStep.progress);
+      setCurrentMessage(currentProgressStep.message);
 
-        return 100;
-      });
-    }, 300);
+      // Simulate song counting during search phase
+      if (currentProgressStep.step === 1 && songCounter < estimatedTotal * 0.8) {
+        songCounter += Math.floor(Math.random() * 3) + 1;
+        setFoundSongs(Math.min(songCounter, estimatedTotal * 0.8));
+      }
 
-    // Simulate song counting
-    const songCountInterval = setInterval(() => {
-      setTotalSongs(42); // Mock total
-      setFoundSongs((prev) => {
-        if (prev < 38) {
-          // Mock found songs
-          return prev + 1;
-        }
-        clearInterval(songCountInterval);
+      currentProgressIndex++;
+    }, 1500); // Update every 1.5 seconds
 
-        return 38;
-      });
-    }, 150);
-
+    // Cleanup interval on unmount
     return () => {
       clearInterval(progressInterval);
-      clearInterval(progressBarInterval);
-      clearInterval(songCountInterval);
     };
-  }, []);
+  }, [isTransferring]);
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) return "completed";
     if (stepIndex === currentStepIndex) return "active";
-
     return "pending";
   };
 
@@ -130,11 +182,9 @@ export default function TransferProgress({
         <CardBody className="p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">
-              Transferring `{playlistData.name}`
+              Transferring &quot;{playlistData.name}&quot;
             </h2>
-            <p className="text-gray-400">
-              Please wait while we process your playlist...
-            </p>
+            <p className="text-gray-400">{currentMessage}</p>
           </div>
 
           {/* Overall Progress Bar */}
@@ -261,8 +311,7 @@ export default function TransferProgress({
               <h3 className="font-semibold text-white">Currently Processing</h3>
             </div>
             <p className="text-gray-400 text-sm">
-              Searching for songs on Spotify... This may take a few moments
-              depending on your playlist size.
+              {currentMessage} This may take a few moments depending on your playlist size.
             </p>
           </CardBody>
         </Card>
