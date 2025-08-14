@@ -13,15 +13,15 @@ This repository is currently a work in progress.
 
 ## Features
 
-- 🔐 OAuth2 login with Google (YouTube) and Spotify
-- 🔁 Automatically matches and transfers songs from YouTube to Spotify
-- 📁 Saves unmatched songs for manual review
-- 📊 Rich CLI + UI progress indicators and summary stats
-- 🧠 Designed to support Spotify → YouTube in future
+- OAuth2 login with Google (YouTube) and Spotify
+- Automatically matches and transfers songs from YouTube to Spotify
+- Saves unmatched songs for manual review
+- Rich CLI + UI progress indicators and summary stats
+- Designed to support Spotify → YouTube in future
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - [Next.js](https://nextjs.org/)
@@ -40,7 +40,7 @@ This repository is currently a work in progress.
 
 ## Project Structure
 ```bash
-📦 youtube-to-spotify/
+Syncwave/
 ├── backend/
 │   ├── youtube_api.py
 │   ├── spotify_api.py
@@ -116,5 +116,5 @@ python main.py --playlist <playlist_name> --public
 
 
 ### 4. Output files
- - 📝 Logs for unmatched songs are saved to logs/
- - 📊 Match statistics printed to console and saved in output/
+ - Logs for unmatched songs are saved to logs/
+ - Match statistics printed to console and saved in output/
