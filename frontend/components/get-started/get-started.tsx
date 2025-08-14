@@ -54,8 +54,6 @@ export default function GetStarted() {
       setPlaylistData(data);
       setCurrentStep("progress");
 
-      console.log("🚀 Starting transfer with data:", data);
-
       // Call your backend's direct transfer endpoint
       const results = await transferAPI.directTransfer(data);
 
