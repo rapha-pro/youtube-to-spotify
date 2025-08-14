@@ -9,7 +9,15 @@ import {
   Card,
   CardBody,
 } from "@heroui/react";
-import { Link2, Music, Globe, Lock, ArrowRight } from "lucide-react";
+import {
+  Link2,
+  Music,
+  Globe,
+  Lock,
+  ArrowRight,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { gsap } from "gsap";
 
 import { PlaylistDataProps, PlaylistFormProps } from "@/types";
@@ -25,8 +33,11 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<PlaylistDataProps>>({});
-
   const [isValidatingUrl, setIsValidatingUrl] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<
+    "unknown" | "connected" | "disconnected"
+  >("unknown");
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
 
   useEffect(() => {
     // Animate form fields
@@ -44,7 +55,39 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
       duration: 0.8,
       ease: "back.out(1.7)",
     });
+
+    // Test backend connection on component mount
+    testBackendConnection();
   }, []);
+
+  const testBackendConnection = async () => {
+    setIsTestingConnection(true);
+    try {
+      console.log("Testing backend connection...");
+
+      const response = await fetch("http://localhost:8000/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        console.log("✅ Backend connected:", data);
+        setBackendStatus("connected");
+      } else {
+        console.error("❌ Backend returned error:", response.status);
+        setBackendStatus("disconnected");
+      }
+    } catch (error) {
+      console.error("❌ Backend connection failed:", error);
+      setBackendStatus("disconnected");
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   const validateForm = async (): Promise<boolean> => {
     const newErrors: Partial<PlaylistDataProps> = {};
@@ -53,20 +96,6 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
       newErrors.url = "Playlist URL is required";
     } else if (!isValidYouTubeURL(formData.url)) {
       newErrors.url = "Please enter a valid YouTube playlist URL";
-    } else {
-      // Validate URL with backend
-      setIsValidatingUrl(true);
-      try {
-        const validation = await youtubeAPI.validatePlaylistUrl(formData.url);
-
-        if (!validation.isValid) {
-          newErrors.url = validation.message || "Invalid playlist URL";
-        }
-      } catch (error) {
-        newErrors.url = "Unable to validate playlist URL";
-      } finally {
-        setIsValidatingUrl(false);
-      }
     }
 
     if (!formData.name.trim()) {
@@ -80,13 +109,23 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
   const isValidYouTubeURL = (url: string): boolean => {
     const youtubePlaylistRegex =
-      /^https:\/\/(www\.)?(youtube\.com|youtu\.be).*[?&]list=([a-zA-Z0-9_-]+)/;
+      /^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/.*[?&]list=([a-zA-Z0-9_-]+)(?:[&#]|$)/i;
 
-    return youtubePlaylistRegex.test(url);
+    // return youtubePlaylistRegex.test(url);
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check backend connection before submitting
+    if (backendStatus !== "connected") {
+      setErrors({
+        url: "Backend server is not connected. Please check if your FastAPI server is running.",
+      });
+
+      return;
+    }
 
     const isValid = await validateForm();
 
@@ -119,8 +158,64 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     }
   };
 
+  const getConnectionStatusColor = () => {
+    switch (backendStatus) {
+      case "connected":
+        return "text-green-400";
+      case "disconnected":
+        return "text-red-400";
+      default:
+        return "text-yellow-400";
+    }
+  };
+
+  const getConnectionStatusText = () => {
+    switch (backendStatus) {
+      case "connected":
+        return "Backend Connected";
+      case "disconnected":
+        return "Backend Disconnected";
+      default:
+        return "Checking Connection...";
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Connection Status Card */}
+      <Card className="mb-6 bg-gray-800/30 border border-gray-700">
+        <CardBody className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {backendStatus === "connected" ? (
+                <Wifi className="text-green-400" size={20} />
+              ) : (
+                <WifiOff className="text-red-400" size={20} />
+              )}
+              <div>
+                <p className={`font-medium ${getConnectionStatusColor()}`}>
+                  {getConnectionStatusText()}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {backendStatus === "connected"
+                    ? "Ready to transfer playlists"
+                    : "Make sure FastAPI server is running on port 8000"}
+                </p>
+              </div>
+            </div>
+            <Button
+              className="min-w-fit"
+              isLoading={isTestingConnection}
+              size="sm"
+              variant="bordered"
+              onPress={testBackendConnection}
+            >
+              {isTestingConnection ? "Testing..." : "Test"}
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+
       <Card className="form-card bg-gray-800/50 backdrop-blur-sm border border-gray-700">
         <CardBody className="p-8">
           <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
@@ -225,24 +320,43 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
               <Button
                 className="submit-button w-full group"
                 classNames={{
-                  base: "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 shadow-lg",
+                  base: `bg-gradient-to-r ${
+                    backendStatus === "connected"
+                      ? "from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                      : "from-gray-500 to-gray-600"
+                  } shadow-lg`,
                 }}
                 color="primary"
                 endContent={
-                  !isLoading && (
+                  !isLoading &&
+                  backendStatus === "connected" && (
                     <ArrowRight
                       className="group-hover:translate-x-1 transition-transform"
                       size={18}
                     />
                   )
                 }
+                isDisabled={backendStatus !== "connected"}
                 isLoading={isLoading}
-                loadingText="Preparing Transfer..."
+                loadingText="Starting Transfer..."
                 size="lg"
                 type="submit"
               >
-                {isLoading ? "Preparing..." : "Start Transfer"}
+                {isLoading
+                  ? "Starting Transfer..."
+                  : backendStatus === "connected"
+                    ? "Start Transfer"
+                    : "Backend Disconnected"}
               </Button>
+
+              {backendStatus === "disconnected" && (
+                <p className="text-red-400 text-sm mt-2 text-center">
+                  Start your FastAPI server:{" "}
+                  <code className="bg-gray-700 px-2 py-1 rounded">
+                    uvicorn main:app --reload
+                  </code>
+                </p>
+              )}
             </div>
           </form>
         </CardBody>
@@ -281,6 +395,32 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
           </CardBody>
         </Card>
       </div>
+
+      {/* Debug Information (only in development) */}
+      {process.env.NODE_ENV === "development" && (
+        <Card className="mt-4 bg-gray-900/50 border border-gray-600">
+          <CardBody className="p-4">
+            <h4 className="text-white font-medium mb-2">Debug Info</h4>
+            <div className="text-xs text-gray-400 space-y-1">
+              <p>
+                Backend Status:{" "}
+                <span className={getConnectionStatusColor()}>
+                  {backendStatus}
+                </span>
+              </p>
+              <p>
+                API Base URL:{" "}
+                {process.env.NEXT_PUBLIC_API_BASE_URL ||
+                  "http://localhost:8000"}
+              </p>
+              <p>
+                Form Valid: {Object.keys(errors).length === 0 ? "✅" : "❌"}
+              </p>
+              <p>Current Errors: {JSON.stringify(errors)}</p>
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

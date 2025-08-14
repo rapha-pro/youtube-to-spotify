@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { config } from "../config";
 
 import {
@@ -6,7 +7,6 @@ import {
   TransferProgressResponseProps,
   TransferResultResponseProps,
 } from "@/types";
-
 
 const API_BASE_URL = config.apiBaseUrl;
 
@@ -38,88 +38,54 @@ api.interceptors.response.use(
   },
 );
 
-// Types
-
 // API functions
 export const transferAPI = {
-  // Start playlist transfer
-  startTransfer: async (
-    data: PlaylistTransferRequestProps,
-  ): Promise<{ transferId: string }> => {
-    const response = await api.post("/transfer/start", data);
-
-    return response.data;
-  },
-
-  // Get transfer progress
-  getTransferProgress: async (
-    transferId: string,
-  ): Promise<TransferProgressResponseProps> => {
-    const response = await api.get(`/transfer/progress/${transferId}`);
-
-    return response.data;
-  },
-
-  // Get transfer results
-  getTransferResults: async (
-    transferId: string,
-  ): Promise<TransferResultResponseProps> => {
-    const response = await api.get(`/transfer/results/${transferId}`);
-
-    return response.data;
-  },
-
-  // Direct transfer (if your backend supports it)
+  // Direct transfer to match your existing backend
   directTransfer: async (
     data: PlaylistTransferRequestProps,
   ): Promise<TransferResultResponseProps> => {
-    const response = await api.post("/transfer", data);
+    // Convert POST data to GET query parameters to match your backend
+    const params = new URLSearchParams({
+      playlist_url: data.url,
+      playlist_name: data.name,
+      is_public: data.isPublic.toString(),
+      description: data.description || "",
+    });
 
-    return response.data;
-  },
-};
+    console.log("Sending transfer request with params:", params.toString());
+    const response = await api.post(`/transfer?${params.toString()}`);
 
-export const youtubeAPI = {
-  // Get playlist info
-  getPlaylistInfo: async (playlistUrl: string) => {
-    const response = await api.get(
-      `/youtube/playlist-info?url=${encodeURIComponent(playlistUrl)}`,
-    );
-
-    return response.data;
-  },
-
-  // Validate playlist URL
-  validatePlaylistUrl: async (
-    playlistUrl: string,
-  ): Promise<{ isValid: boolean; message?: string }> => {
-    try {
-      const response = await api.post("/youtube/validate-url", {
-        url: playlistUrl,
-      });
-
-      return response.data;
-    } catch (error) {
-      return { isValid: false, message: "Invalid YouTube playlist URL" };
-    }
-  },
-};
-
-export const spotifyAPI = {
-  // Get user profile (for authentication check)
-  getUserProfile: async () => {
-    const response = await api.get("/spotify/me");
-
-    return response.data;
-  },
-
-  // Search for a song
-  searchSong: async (query: string) => {
-    const response = await api.get(
-      `/spotify/search?q=${encodeURIComponent(query)}`,
-    );
-
-    return response.data;
+    // Transform your backend response to match our expected format
+    return {
+      playlistId: response.data.playlist_id || "unknown",
+      playlistUrl: response.data.playlist_url || "#",
+      totalSongs: response.data.total_songs || 0,
+      transferredSongs: response.data.matched_titles?.length || 0,
+      failedSongs: response.data.unmatched_titles?.length || 0,
+      songs: [
+        // Map matched songs
+        ...(response.data.matched_titles || []).map(
+          (title: string, index: number) => ({
+            id: `matched-${index}`,
+            title: title,
+            artist: "Unknown Artist", // Your backend doesn't return artist info
+            status: "success" as const,
+            spotifyUrl: "#", // Your backend doesn't return individual URLs
+          }),
+        ),
+        // Map unmatched songs
+        ...(response.data.unmatched_titles || []).map(
+          (title: string, index: number) => ({
+            id: `unmatched-${index}`,
+            title: title,
+            artist: "Unknown Artist",
+            status: "failed" as const,
+          }),
+        ),
+      ],
+      transferDuration: 0, // Your backend doesn't return this
+      createdAt: new Date().toISOString(),
+    };
   },
 };
 

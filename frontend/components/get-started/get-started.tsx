@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@heroui/react";
-import Link from "next/link";
+import { Button, Link } from "@heroui/react";
+// import Link from "next/link";
 
 import { ArrowLeft } from "lucide-react";
 import { gsap } from "gsap";
+
 import PlaylistForm from "@/components/get-started/playlistForm";
 import TransferProgress from "@/components/get-started/transferProgress";
 import TransferResults from "@/components/get-started/transferResults";
@@ -15,6 +16,7 @@ import {
   TransferResultResponseProps,
   PlaylistTransferRequestProps,
 } from "@/types";
+import axios from "axios";
 
 type TransferStep = "form" | "progress" | "results";
 
@@ -52,52 +54,29 @@ export default function GetStarted() {
       setPlaylistData(data);
       setCurrentStep("progress");
 
-      // Try direct transfer first (if your backend supports it)
-      try {
-        const results = await transferAPI.directTransfer(data);
+      console.log("🚀 Starting transfer with data:", data);
 
-        setTransferResults(results);
-        setCurrentStep("results");
-      } catch (directError) {
-        // If direct transfer fails, try the async approach
-        console.log("Direct transfer failed, trying async approach...");
+      // Call your backend's direct transfer endpoint
+      const results = await transferAPI.directTransfer(data);
 
-        const { transferId: id } = await transferAPI.startTransfer(data);
+      console.log("✅ Transfer completed:", results);
 
-        setTransferId(id);
-
-        // Poll for progress
-        const pollProgress = setInterval(async () => {
-          try {
-            const progress = await transferAPI.getTransferProgress(id);
-
-            if (progress.status === "completed") {
-              clearInterval(pollProgress);
-              const results = await transferAPI.getTransferResults(id);
-
-              setTransferResults(results);
-              setCurrentStep("results");
-            } else if (progress.status === "failed") {
-              clearInterval(pollProgress);
-              setError("Transfer failed. Please try again.");
-              setCurrentStep("form");
-            }
-          } catch (pollError) {
-            console.error("Polling error:", pollError);
-            clearInterval(pollProgress);
-            setError("Failed to get transfer progress. Please try again.");
-            setCurrentStep("form");
-          }
-        }, 2000); // Poll every 2 seconds
-
-        // Cleanup polling on component unmount
-        return () => clearInterval(pollProgress);
-      }
+      setTransferResults(results);
+      setCurrentStep("results");
     } catch (error) {
-      console.error("Transfer failed:", error);
-      setError(
-        "Failed to start transfer. Please check your playlist URL and try again.",
-      );
+      console.error("❌ Transfer failed:", error);
+
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          `HTTP ${error.response?.status}: ${error.message}`;
+
+        setError(`Transfer failed: ${errorMessage}`);
+      } else {
+        setError("Transfer failed: An unexpected error occurred");
+      }
+
       setCurrentStep("form");
     }
   };

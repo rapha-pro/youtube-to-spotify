@@ -7,7 +7,7 @@ from backend.services.transfer_api import transfer_playlist_api
 
 router = APIRouter(tags=["Transfer"])
 
-@router.get("/transfer")
+@router.post("/")
 def transfer_playlist(
     playlist_url: Annotated[
         str,

@@ -2,13 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Link } from "@heroui/react";
+import Link from "next/link";
 import { Button } from "@heroui/react";
 import { Sparkles, Workflow, HelpCircle, ArrowRight } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { siteConfig } from "@/utils/site";
-import { GithubIcon } from "@/components/icons";
 import Logo from "@/components/logo";
 
 const iconMap = {
@@ -57,16 +56,6 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          <Link
-            isExternal
-            aria-label="Github"
-            className="hover:text-green-400 transition-colors"
-            href={siteConfig.links.github}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <GithubIcon className="text-gray-400" />
-          </Link>
         </div>
 
         <Link href="/get-started">
