@@ -4,7 +4,6 @@ import { config } from "../config";
 
 import {
   PlaylistTransferRequestProps,
-  TransferProgressResponseProps,
   TransferResultResponseProps,
 } from "@/types";
 
@@ -39,12 +38,20 @@ api.interceptors.response.use(
 );
 
 // API functions
+
+/**
+ * Direct transfer to match backend endpoint
+ * @param data - Playlist transfer request data
+ * @returns Transfer result response
+ * @throws Error if the transfer fails
+ */
 export const transferAPI = {
-  // Direct transfer to match your existing backend
+  // Direct transfer to match backend endpoint
   directTransfer: async (
     data: PlaylistTransferRequestProps,
   ): Promise<TransferResultResponseProps> => {
-    // Convert POST data to GET query parameters to match your backend
+
+    // Convert POST data to GET query parameters to match backend
     const params = new URLSearchParams({
       playlist_url: data.url,
       playlist_name: data.name,
@@ -52,10 +59,9 @@ export const transferAPI = {
       description: data.description || "",
     });
 
-    console.log("Sending transfer request with params:", params.toString());
     const response = await api.post(`/transfer?${params.toString()}`);
 
-    // Transform your backend response to match our expected format
+    // Transform backend response to match our expected format
     return {
       playlistId: response.data.playlist_id || "unknown",
       playlistUrl: response.data.playlist_url || "#",
@@ -68,9 +74,9 @@ export const transferAPI = {
           (title: string, index: number) => ({
             id: `matched-${index}`,
             title: title,
-            artist: "Unknown Artist", // Your backend doesn't return artist info
+            artist: "Unknown Artist", // backend doesn't return artist info
             status: "success" as const,
-            spotifyUrl: "#", // Your backend doesn't return individual URLs
+            spotifyUrl: "#", // backend doesn't return individual URLs
           }),
         ),
         // Map unmatched songs
@@ -83,7 +89,7 @@ export const transferAPI = {
           }),
         ),
       ],
-      transferDuration: 0, // Your backend doesn't return this
+      transferDuration: 0, // backend doesn't return this
       createdAt: new Date().toISOString(),
     };
   },

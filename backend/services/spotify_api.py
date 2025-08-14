@@ -157,6 +157,6 @@ def api_add_tracks_from_titles(
         api_add_tracks_to_playlist(sp, playlist_id, track_ids)
 
     return {
-        "added": track_ids,
+        "matched": track_ids,
         "unmatched": unmatched_titles
     }
