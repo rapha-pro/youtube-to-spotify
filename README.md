@@ -1,120 +1,356 @@
-# 🚧 Project Under Construction 🚧
+# Syncwave
 
-This repository is currently a work in progress. 
+A production-ready full-stack application for seamlessly transferring YouTube playlists to Spotify with intelligent song matching and comprehensive transfer analytics.
 
-![App Preview](./frontend/public/syncwave.png)
+## System Architecture
 
+```mermaid
+graph TB
+    subgraph "Frontend (Next.js)"
+        UI[User Interface]
+        Auth[Authentication Handler]
+        API[API Client]
+        State[State Management]
+    end
+    
+    subgraph "Backend (FastAPI)"
+        Router[API Router]
+        YouTube[YouTube Service]
+        Spotify[Spotify Service]
+        Transfer[Transfer Engine]
+        Match[Song Matching Algorithm]
+    end
+    
+    subgraph "External APIs"
+        YT_API[YouTube Data API v3]
+        SP_API[Spotify Web API]
+    end
+    
+    subgraph "Data Flow"
+        Cache[Response Cache]
+        Logs[Transfer Logs]
+    end
+    
+    UI --> Auth
+    UI --> API
+    API --> Router
+    
+    Router --> YouTube
+    Router --> Spotify
+    Router --> Transfer
+    
+    Transfer --> Match
+    YouTube --> YT_API
+    Spotify --> SP_API
+    
+    YouTube --> Cache
+    Transfer --> Logs
+    
+    Match --> |Search Results| Spotify
+    Transfer --> |Final Results| API
+    API --> |Display Results| UI
+```
 
-# 🎵 Syncwave – Seamless Playlist Transfer Between YouTube & Spotify
+## Transfer Flow
 
-**Synwave** is a full-stack web app that lets users securely transfer their YouTube playlists to Spotify with just a few clicks. Built with a beautiful modern UI and a Python backend, this app handles authentication, track matching, and playlist creation; all while offering progress feedback and unmatched track logs.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant YouTube API
+    participant Spotify API
+    
+    User->>Frontend: Submit playlist URL & details
+    Frontend->>Backend: POST /transfer
+    
+    Backend->>YouTube API: Extract playlist ID
+    YouTube API-->>Backend: Playlist metadata
+    
+    Backend->>YouTube API: Fetch video list
+    YouTube API-->>Backend: Video titles & metadata
+    
+    loop For each video
+        Backend->>Backend: Clean & parse title
+        Backend->>Spotify API: Search for song
+        Spotify API-->>Backend: Search results
+        Backend->>Backend: Calculate match confidence
+        alt High confidence match
+            Backend->>Backend: Add to matched list
+        else Low confidence or not found
+            Backend->>Backend: Add to failed list
+        end
+    end
+    
+    Backend->>Spotify API: Create playlist
+    Spotify API-->>Backend: Playlist created
+    
+    Backend->>Spotify API: Add matched songs
+    Spotify API-->>Backend: Songs added
+    
+    Backend-->>Frontend: Transfer results
+    Frontend-->>User: Display results with statistics
+```
 
----
-
-## Features
-
-- OAuth2 login with Google (YouTube) and Spotify
-- Automatically matches and transfers songs from YouTube to Spotify
-- Saves unmatched songs for manual review
-- Rich CLI + UI progress indicators and summary stats
-- Designed to support Spotify → YouTube in future
-
----
-
-## Tech Stack
+## Technology Stack
 
 ### Frontend
-- [Next.js](https://nextjs.org/)
-- [React](https://react.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Hero UI](https://www.heroui.com/)
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with HeroUI components
+- **Animations**: GSAP
+- **HTTP Client**: Axios
+- **State Management**: React hooks
 
 ### Backend
-- [Python](https://www.python.org/)
-- [Spotipy](https://spotipy.readthedocs.io/)
-- [Google API Client](https://github.com/googleapis/google-api-python-client)
-- [Rich](https://rich.readthedocs.io/)
+- **Framework**: FastAPI
+- **Language**: Python 3.8+
+- **YouTube Integration**: Google API Client
+- **Spotify Integration**: Spotipy
+- **Environment**: Python-dotenv
+- **Logging**: Rich (Console) + Python logging
 
----
+### APIs
+- **YouTube Data API v3**: Playlist and video metadata extraction
+- **Spotify Web API**: Playlist creation and song search
 
-## Project Structure
+## Prerequisites
+
+- Node.js 18+ and npm/pnpm
+- Python 3.8+
+- Google Cloud Project with YouTube Data API enabled
+- Spotify Developer Account
+
+## Installation
+
+### 1. Clone Repository
 ```bash
-Syncwave/
-├── backend/
-│   ├── youtube_api.py
-│   ├── spotify_api.py
-│   └── main.py
-├── frontend/
-│   ├── app
-│   ├── page.tsx
-    ├── layout.tsx
-│   └── sections
-│       ├── Header.tsx
-│       ├── Hero.tsx
-│       ├── Features.tsx
-│       ├── HowItWorks.tsx
-│       ├── Testimonial.tsx
-│       └── Footer.tsx
-│   └── components/
-├── public/
-├── output/ (generated logs)
-└── README.md
-
+git clone https://github.com/your-username/syncwave.git
+cd syncwave
 ```
 
-## How to Run
+### 2. Backend Setup
 
-### 1. Clone the repo
+#### Install Dependencies
 ```bash
-git clone https://github.com/your-username/youtube-to-spotify.git
-cd youtube-to-spotify
-```
-
-
-### 2. Set up the backend (Python)
-```
 cd backend
-python3 -m venv venv
-source venv/bin/activate  # Use venv\Scripts\activate on Windows
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2.1: Create a `.env` file in `backend/`
-#### YouTube API
-```bash
-YOUTUBE_CLIENT_SECRET_FILE=googleCloud_client_secret.json
-YOUTUBE_SCOPES=https://www.googleapis.com/auth/youtube.readonly
+#### Environment Configuration
+Create `backend/.env`:
+```env
+# YouTube API Configuration
+YOUTUBE_CLIENT_JSON=path/to/client_secret.json
+YOUTUBE_SCOPE=https://www.googleapis.com/auth/youtube.readonly
+
+# Spotify API Configuration
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8080/callback
+SPOTIFY_SCOPE=playlist-modify-public playlist-modify-private
+
+# Application Configuration
+API_BASE_URL=http://localhost:8000
 ```
 
-#### Spotify API
-```bash
-SPOTIPY_CLIENT_ID=your_spotify_client_id
-SPOTIPY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_SCOPE=playlist-modify-private playlist-modify-public
-SPOTIPY_REDIRECT_URI=http://127.0.0.1:8080/callback
-```
+#### API Credentials Setup
 
+**Google Cloud (YouTube)**:
+1. Create project at [Google Cloud Console](https://console.cloud.google.com)
+2. Enable YouTube Data API v3
+3. Create OAuth 2.0 credentials
+4. Download client secret JSON file
 
-### 3.  Set up the frontend (Next.js + Tailwind + Hero UI)
+**Spotify**:
+1. Create app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Add redirect URI: `http://localhost:8080/callback`
+3. Copy Client ID and Client Secret
+
+### 3. Frontend Setup
+
+#### Install Dependencies
 ```bash
-cd ../frontend
+cd frontend
+npm install
+# or
 pnpm install
-pnpm dev
 ```
 
+#### Environment Configuration
+Create `frontend/.env.local`:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
 
-The frontend will run on `http://localhost:3000`
+## Development
 
-
-#### Run the backend script (optional CLI tool)
+### Start Backend Server
 ```bash
 cd backend
 source venv/bin/activate
-python main.py --playlist <playlist_name> --public
+uvicorn main:app --reload --port 8000
 ```
 
+### Start Frontend Development Server
+```bash
+cd frontend
+npm run dev
+# or
+pnpm dev
+```
 
-### 4. Output files
- - Logs for unmatched songs are saved to logs/
- - Match statistics printed to console and saved in output/
+Access the application at `http://localhost:3000`
+
+## API Documentation
+
+### Transfer Endpoint
+```http
+POST /transfer
+Content-Type: application/json
+
+{
+  "playlist_url": "https://www.youtube.com/playlist?list=...",
+  "playlist_name": "My Transferred Playlist",
+  "is_public": true,
+  "description": "Transferred from YouTube"
+}
+```
+
+### Response Format
+```json
+{
+  "success": true,
+  "playlist_id": "spotify_playlist_id",
+  "playlist_url": "https://open.spotify.com/playlist/...",
+  "total_songs": 25,
+  "transferred_songs": 22,
+  "failed_songs": 3,
+  "songs": [
+    {
+      "id": "song_1",
+      "title": "Song Title",
+      "artist": "Artist Name",
+      "album": "Album Name",
+      "status": "success",
+      "spotify_url": "https://open.spotify.com/track/...",
+      "youtube_url": "https://www.youtube.com/watch?v=...",
+      "thumbnail": "https://i.scdn.co/image/..."
+    }
+  ],
+  "transfer_duration": 45.7,
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+## Project Structure
+
+```
+syncwave/
+├── backend/
+│   ├── api/
+│   │   └── transfer.py              # API route handlers
+│   ├── services/
+│   │   ├── youtube_api.py           # YouTube API integration
+│   │   ├── spotify_api.py           # Spotify API integration
+│   │   └── transfer_api.py          # Transfer orchestration
+│   ├── models/
+│   │   └── transfer.py              # Pydantic models
+│   ├── credentials/                 # API credentials (gitignored)
+│   ├── cache/                       # API response cache
+│   └── main.py                      # FastAPI application
+├── frontend/
+│   ├── app/
+│   │   ├── page.tsx                 # Home page
+│   │   ├── layout.tsx               # Root layout
+│   │   └── get-started/
+│   │       └── page.tsx             # Transfer flow page
+│   ├── components/
+│   │   ├── get-started/             # Transfer flow components
+│   │   └── ui/                      # Reusable UI components
+│   ├── utils/
+│   │   └── api_routes/
+│   │       └── api.ts               # API client configuration
+│   └── types/
+│       └── index.ts                 # TypeScript type definitions
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
+
+## Core Features
+
+### Intelligent Song Matching
+- Multiple search strategies for improved accuracy
+- Confidence scoring algorithm
+- Support for multi-artist tracks
+- Handling of remixes, covers, and alternate versions
+
+### Transfer Analytics
+- Real-time progress tracking
+- Detailed success/failure reporting
+- Performance metrics and timing
+- Comprehensive error logging
+
+### User Experience
+- Responsive design with dark theme
+- GSAP-powered animations
+- Form validation and error handling
+- Progress visualization
+
+## Configuration
+
+### Timeout Settings
+Default API timeout is 120 seconds for transfer operations. Adjust in `frontend/utils/api_routes/api.ts`:
+
+```typescript
+const api = axios.create({
+  timeout: 120000, // 2 minutes
+});
+```
+
+### Matching Algorithm
+Confidence threshold for song matching is 60%. Modify in `backend/services/spotify_api.py`:
+
+```python
+minimum_confidence = 0.6  # Adjust as needed
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Transfer Timeout**
+- Increase timeout in API configuration
+- Check network connectivity
+- Verify API rate limits
+
+**Authentication Errors**
+- Verify API credentials in `.env` files
+- Check redirect URI configuration
+- Ensure required OAuth scopes are granted
+
+**Song Matching Issues**
+- Review confidence threshold settings
+- Check YouTube title parsing logic
+- Verify Spotify search query generation
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- YouTube Data API v3 for playlist data access
+- Spotify Web API for playlist creation and management
+- Next.js and FastAPI communities for excellent documentation
