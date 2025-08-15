@@ -133,8 +133,8 @@ sequenceDiagram
 
 ## Prerequisites
 
-- Node.js 18+ and npm/pnpm
-- Python 3.8+
+- Node.js 18+ and npm/pnpm (preferred)
+- Python 3.11+
 - Google Cloud Project with YouTube Data API enabled
 - Spotify Developer Account
 
