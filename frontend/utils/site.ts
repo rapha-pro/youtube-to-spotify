@@ -6,23 +6,20 @@ export const siteConfig = {
   navItems: [
     {
       label: "Features",
-      href: "#features",
+      href: "/#features",
       icon: "Sparkles"
     },
     {
       label: "How It Works",
-      href: "#how-it-works",
+      href: "/#how-it-works",
       icon: "Workflow"
     },
     {
       label: "FAQ",
-      href: "#faq",
+      href: "/#faq",
       icon: "HelpCircle"
     }
   ],
-  links: {
-    github: "https://github.com/rapha-pro/youtube-to-spotify",
-  }
 };
 
 

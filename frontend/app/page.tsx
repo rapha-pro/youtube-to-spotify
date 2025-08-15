@@ -7,6 +7,7 @@ import Hero from "@/app/sections/Hero";
 import HowItWorks from "@/app/sections/HowItWorks";
 import Testimonial from "@/app/sections/Testimonial";
 import Footer from "@/app/sections/Footer";
+import GetStarted from "@/components/get-started/get-started";
 
 export default function Home() {
   return (

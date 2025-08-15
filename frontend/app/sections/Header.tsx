@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Link } from "@heroui/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@heroui/react";
-import { Sparkles, Workflow, HelpCircle } from "lucide-react";
+import { Sparkles, Workflow, HelpCircle, ArrowRight } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { siteConfig } from "@/utils/site";
-import { GithubIcon } from "@/components/icons";
 import Logo from "@/components/logo";
 
 const iconMap = {
@@ -18,6 +18,7 @@ const iconMap = {
 
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -30,18 +31,19 @@ export default function Header() {
     });
   });
 
+  const handleGetStarted = () => {
+    router.push("/get-started");
+  };
+
   return (
     <header
       ref={headerRef}
       className="fixed top-0 w-full bg-black/80 backdrop-blur-md z-50 border-b border-gray-800"
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-		<Link
-            href="/"
-            aria-label="Syncwave"
-		>
-			<Logo />
-		</Link>
+        <Link aria-label="Syncwave" href="/">
+          <Logo />
+        </Link>
 
         <div className="hidden md:flex gap-6 items-center">
           {siteConfig.navItems.map((item) => (
@@ -54,21 +56,22 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          <Link
-            className="hover:text-green-400 transition-colors"
-            isExternal
-            aria-label="Github"
-            href={siteConfig.links.github}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <GithubIcon className="text-gray-400" />
-          </Link>
         </div>
 
-        <Button as={Link} color="success" href="#get-started" variant="shadow">
-          Get Started
-        </Button>
+        <Link href="/get-started">
+          <Button
+            color="success"
+            endContent={
+              <ArrowRight
+                className="group-hover:translate-x-1 transition-transform"
+                size={20}
+              />
+            }
+            variant="shadow"
+          >
+            Get Started
+          </Button>
+        </Link>
       </div>
     </header>
   );
