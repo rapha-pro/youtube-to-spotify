@@ -2,6 +2,8 @@
 
 A production-ready full-stack application for seamlessly transferring YouTube playlists to Spotify with intelligent song matching and comprehensive transfer analytics.
 
+![App Preview](./frontend/public/syncwave.png)
+
 ## System Architecture
 
 ```mermaid
@@ -51,6 +53,14 @@ graph TB
     API --> |Display Results| UI
 ```
 
+**System Architecture Flow:**
+• **User interaction** starts at the frontend UI, which handles authentication and communicates with the backend
+• **Backend API Router** receives requests and coordinates between YouTube, Spotify, and Transfer services
+• **External APIs** (YouTube Data API v3 and Spotify Web API) provide the core data and functionality
+• **Transfer Engine** orchestrates the entire process, using the Song Matching Algorithm for intelligent pairing
+• **Data persistence** happens through response caching and comprehensive transfer logging
+• **Results flow back** through the API client to display rich analytics and transfer status to users
+
 ## Transfer Flow
 
 ```mermaid
@@ -92,19 +102,26 @@ sequenceDiagram
     Frontend-->>User: Display results with statistics
 ```
 
+**Transfer Flow Process:**
+• **User initiates transfer** by submitting YouTube playlist URL and desired Spotify playlist settings
+• **Backend extracts playlist data** from YouTube API, including video metadata, titles, and thumbnails
+• **Intelligent song matching** processes each video through multiple search strategies and confidence scoring
+• **Dual-path processing** separates successfully matched songs from failed matches with detailed error tracking
+• **Spotify playlist creation** and bulk song addition happens efficiently using batch operations
+• **Comprehensive results delivery** includes transfer statistics, individual song status, and performance metrics
+
 ## Technology Stack
 
 ### Frontend
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with HeroUI components
 - **Animations**: GSAP
 - **HTTP Client**: Axios
-- **State Management**: React hooks
 
 ### Backend
 - **Framework**: FastAPI
-- **Language**: Python 3.8+
+- **Language**: Python 3.11+
 - **YouTube Integration**: Google API Client
 - **Spotify Integration**: Spotipy
 - **Environment**: Python-dotenv
