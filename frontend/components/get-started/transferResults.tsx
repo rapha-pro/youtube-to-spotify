@@ -398,7 +398,8 @@ export default function TransferResults({
               <Divider className="my-6 bg-gray-500/60" />
               <div className="text-center p-4 bg-gray-700/40 rounded-lg border border-gray-600/40 backdrop-blur-sm">
                 <p className="text-gray-200 text-sm mb-2 font-medium">
-                  {results.failedSongs} songs couldn&apos;t be found on Spotify
+                  {results.failedSongs} song(s) couldn&apos;t be found on
+                  Spotify
                 </p>
                 <p className="text-gray-400 text-xs">
                   This usually happens when songs are not available in your
@@ -415,7 +416,7 @@ export default function TransferResults({
       <Card className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-md border border-blue-500/50">
         <CardBody className="p-6">
           <h4 className="text-lg font-semibold text-white mb-3">
-            📊 Transfer Statistics
+            Transfer Statistics
           </h4>
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">

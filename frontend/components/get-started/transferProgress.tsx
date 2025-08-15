@@ -212,7 +212,7 @@ export default function TransferProgress({
     <div ref={containerRef} className="max-w-3xl mx-auto space-y-8">
       {/* Debug Info */}
       <div className="bg-gray-800/20 p-2 rounded text-xs text-gray-500 font-mono">
-        Debug: Step={currentStepIndex}, Progress={Math.round(progress)}%, Transferring={isTransferring.toString()}
+        Step={currentStepIndex}, Progress={Math.round(progress)}%, Transferring={isTransferring.toString()}
       </div>
 
       {/* Main Progress Card */}

@@ -1,10 +1,13 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+
 import { Providers } from "./providers";
+import Header from "./sections/Header";
+import Footer from "./sections/Footer";
+
 import { siteConfig } from "@/utils/site";
 import { fontSans } from "@/utils/fonts";
-import Header from "./sections/Header";
 
 export const metadata: Metadata = {
   title: {
@@ -44,13 +47,13 @@ export default function RootLayout({
             <main className="container mx-auto pt-16 px-2 flex-grow">
               {children}
             </main>
+            <Footer />
           </div>
         </Providers>
       </body>
     </html>
   );
 }
-
 
 // <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
 //   {children}
