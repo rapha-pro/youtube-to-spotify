@@ -12,7 +12,7 @@ const API_BASE_URL = config.apiBaseUrl;
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds timeout for transfers
+  timeout: 180000, // 2-min timeout for transfers
   headers: {
     "Content-Type": "application/json",
   },

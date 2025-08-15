@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
 import { gsap } from "gsap";
-import { useRouter } from "next/navigation";
+import axios from "axios";
 
 import PlaylistForm from "@/components/get-started/playlistForm";
 import TransferProgress from "@/components/get-started/transferProgress";
@@ -15,40 +15,62 @@ import {
   TransferResultResponseProps,
   PlaylistTransferRequestProps,
 } from "@/types";
-import axios from "axios";
 
 type TransferStep = "form" | "progress" | "results";
 
 export default function GetStarted() {
-  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState<TransferStep>("form");
-  const [playlistData, setPlaylistData] = useState<PlaylistTransferRequestProps | null>(null);
-  const [transferResults, setTransferResults] = useState<TransferResultResponseProps | null>(null);
+  const [playlistData, setPlaylistData] =
+    useState<PlaylistTransferRequestProps | null>(null);
+  const [transferResults, setTransferResults] =
+    useState<TransferResultResponseProps | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
-    // Initial page animation
-    gsap.from(".page-header", {
-      y: -50,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out",
-    });
+    const animatePageElements = () => {
+      // Kill any existing animations first
+      gsap.killTweensOf([".page-header", ".main-content"]);
 
-    gsap.from(".main-content", {
-      y: 50,
-      opacity: 0,
-      duration: 0.8,
-      delay: 0.2,
-      ease: "power3.out",
-    });
-  }, []);
+      // Reset elements to initial state WITHOUT clearing all props
+      gsap.set([".page-header", ".main-content"], {
+        y: 0,
+        opacity: 1,
+        // Removed clearProps: "all" - this was likely causing the issue
+      });
+
+      // Only animate if elements exist
+      const pageHeader = document.querySelector(".page-header");
+      const mainContent = document.querySelector(".main-content");
+
+      if (pageHeader && mainContent) {
+        gsap.fromTo(
+          ".page-header",
+          { y: -50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+        );
+
+        gsap.fromTo(
+          ".main-content",
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" },
+        );
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      animatePageElements();
+    }, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentStep]);
 
   const handleBackToHome = () => {
-    // Add a small delay to ensure smooth transition
-    router.push("/");
+    gsap.killTweensOf([".page-header", ".main-content"]);
+    window.location.href = "/";
   };
 
   const handleFormSubmit = async (data: PlaylistTransferRequestProps) => {
@@ -58,9 +80,8 @@ export default function GetStarted() {
       setIsTransferring(true);
       setCurrentStep("progress");
 
-      console.log("[get-started.tsx]Starting transfer with data:", data);
+      console.log("🚀 Starting transfer with data:", data);
 
-      // Call your backend's direct transfer endpoint
       const results = await transferAPI.directTransfer(data);
 
       console.log("✅ Transfer completed:", results);
@@ -68,7 +89,7 @@ export default function GetStarted() {
       setTransferResults(results);
       setCurrentStep("results");
     } catch (error) {
-      console.error("[get-started]❌ Transfer failed:", error);
+      console.error("[GetStarted] - Transfer failed:", error);
 
       if (axios.isAxiosError(error)) {
         const errorMessage =
@@ -88,14 +109,39 @@ export default function GetStarted() {
   };
 
   const handleStartOver = () => {
+    console.log("[GetStarted] - Starting over - resetting all state");
+
+    // Kill all GSAP animations first
+    gsap.killTweensOf("*");
+
+    // Reset state
     setCurrentStep("form");
     setPlaylistData(null);
     setTransferResults(null);
     setError(null);
     setIsTransferring(false);
+    setFormKey((prev) => prev + 1);
+
+    // Force scroll to top
+    window.scrollTo(0, 0);
+
+    // Debug log
+    console.log("[GetStarted] - State after reset:", {
+      currentStep: "form",
+      formKey: formKey + 1,
+      playlistData: null,
+      transferResults: null,
+    });
   };
 
   const getStepTitle = () => {
+    console.log(
+      "[GetStarted] - Current step:",
+      currentStep,
+      "Form key:",
+      formKey,
+    );
+
     switch (currentStep) {
       case "form":
         return "Fill in your playlist details to begin the transfer";
@@ -120,13 +166,13 @@ export default function GetStarted() {
         <div className="container mx-auto max-w-4xl">
           <Button
             className="group mb-6"
-            variant="ghost"
             startContent={
               <ArrowLeft
                 className="group-hover:-translate-x-1 transition-transform"
                 size={18}
               />
             }
+            variant="ghost"
             onPress={handleBackToHome}
           >
             Back to Home
@@ -154,18 +200,23 @@ export default function GetStarted() {
       <main className="main-content relative z-10 px-4 pb-16">
         <div className="container mx-auto max-w-4xl">
           {currentStep === "form" && (
-            <PlaylistForm onSubmit={handleFormSubmit} />
+            <div
+              style={{ display: "block", visibility: "visible", opacity: 1 }}
+            >
+              <PlaylistForm key={formKey} onSubmit={handleFormSubmit} />
+            </div>
           )}
 
           {currentStep === "progress" && playlistData && (
             <TransferProgress
-              playlistData={playlistData}
               isTransferring={isTransferring}
+              playlistData={playlistData}
             />
           )}
 
           {currentStep === "results" && transferResults && (
             <TransferResults
+              key={`results-${formKey}`}
               results={transferResults}
               onStartOver={handleStartOver}
             />

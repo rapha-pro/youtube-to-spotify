@@ -22,6 +22,14 @@ export default function TransferProgress({
   const [foundSongs, setFoundSongs] = useState(0);
   const [totalSongs, setTotalSongs] = useState(0);
   const [currentMessage, setCurrentMessage] = useState("Starting transfer...");
+  const progressTime = 1000;
+
+  console.log("🎵 TransferProgress rendered:", { 
+    playlistName: playlistData.name, 
+    isTransferring,
+    currentStep: currentStepIndex,
+    progress: Math.round(progress)
+  });
 
   const steps: ProgressStepProps[] = [
     {
@@ -61,26 +69,47 @@ export default function TransferProgress({
   ];
 
   useEffect(() => {
-    // Initial animation
-    gsap.from(".progress-container", {
-      scale: 0.9,
-      opacity: 0,
-      duration: 0.8,
-      ease: "back.out(1.7)",
-    });
+    console.log("🎬 TransferProgress useEffect (animations) triggered");
+    
+    // Reset GSAP context and clear any existing animations
+    const ctx = gsap.context(() => {
+      // Kill any existing animations
+      gsap.killTweensOf([".progress-container", ".step-item"]);
+      
+      // Reset elements to visible state first
+      gsap.set([".progress-container", ".step-item"], { 
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        clearProps: "all" 
+      });
 
-    gsap.from(".step-item", {
-      x: -50,
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.1,
-      delay: 0.3,
-      ease: "power3.out",
-    });
-  }, []);
+      // Then animate them in
+      gsap.fromTo(".progress-container",
+        { scale: 0.9, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" }
+      );
+
+      gsap.fromTo(".step-item",
+        { x: -50, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.6, stagger: 0.1, delay: 0.3, ease: "power3.out" }
+      );
+    }, containerRef);
+
+    // Cleanup function
+    return () => ctx.revert();
+  }, []); // Only run once on mount
 
   useEffect(() => {
-    if (!isTransferring) return;
+    console.log("📊 TransferProgress progress simulation effect:", { isTransferring });
+    
+    if (!isTransferring) {
+      console.log("⏸ Not transferring, skipping progress simulation");
+      return;
+    }
+
+    console.log("▶ Starting progress simulation");
 
     // Realistic progress simulation
     const progressSteps = [
@@ -88,66 +117,69 @@ export default function TransferProgress({
         step: 0,
         progress: 10,
         message: "Extracting playlist ID from URL...",
-        duration: 1000,
+        duration: progressTime * 5,
       },
       {
         step: 0,
         progress: 25,
         message: "Fetching YouTube video details...",
-        duration: 2000,
+        duration: progressTime * 10,
       },
       {
         step: 1,
         progress: 35,
         message: "Analyzing video titles...",
-        duration: 1000,
+        duration: progressTime * 6,
       },
       {
         step: 1,
         progress: 50,
         message: "Searching for songs on Spotify...",
-        duration: 3000,
+        duration: progressTime * 8,
       },
       {
         step: 1,
         progress: 75,
         message: "Matching songs with high confidence...",
-        duration: 2000,
+        duration: progressTime * 6,
       },
       {
         step: 2,
         progress: 85,
         message: "Creating Spotify playlist...",
-        duration: 1500,
+        duration: progressTime * 2.5,
       },
       {
         step: 2,
         progress: 95,
         message: "Adding songs to playlist...",
-        duration: 2000,
+        duration: progressTime * 4,
       },
       {
         step: 3,
         progress: 100,
         message: "Transfer completed successfully!",
-        duration: 500,
+        duration: progressTime,
       },
     ];
 
     let currentProgressIndex = 0;
     let songCounter = 0;
-    const estimatedTotal = 25; // Estimated total songs
+    const estimatedTotal = 0; // Estimated total songs
 
     // Set initial total
     setTotalSongs(estimatedTotal);
 
     const progressInterval = setInterval(() => {
       if (currentProgressIndex >= progressSteps.length) {
+        console.log("✅ Progress simulation completed");
         clearInterval(progressInterval);
         return;
       }
 
       const currentProgressStep = progressSteps[currentProgressIndex];
+      
+      console.log(`📈 Progress step ${currentProgressIndex}:`, currentProgressStep.message, `${currentProgressStep.progress}%`);
 
       // Update step, progress, and message
       setCurrentStepIndex(currentProgressStep.step);
@@ -165,9 +197,10 @@ export default function TransferProgress({
 
     // Cleanup interval on unmount
     return () => {
+      console.log("🧹 Cleaning up progress interval");
       clearInterval(progressInterval);
     };
-  }, [isTransferring]);
+  }, [isTransferring, progressTime]);
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) return "completed";
@@ -177,6 +210,11 @@ export default function TransferProgress({
 
   return (
     <div ref={containerRef} className="max-w-3xl mx-auto space-y-8">
+      {/* Debug Info */}
+      <div className="bg-gray-800/20 p-2 rounded text-xs text-gray-500 font-mono">
+        Debug: Step={currentStepIndex}, Progress={Math.round(progress)}%, Transferring={isTransferring.toString()}
+      </div>
+
       {/* Main Progress Card */}
       <Card className="progress-container bg-gray-800/50 backdrop-blur-sm border border-gray-700">
         <CardBody className="p-8">

@@ -30,35 +30,43 @@ export default function TransferResults({
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
-    // Success animation
-    gsap.from(".success-header", {
-      scale: 0.8,
-      opacity: 0,
-      duration: 1,
-      ease: "back.out(1.7)",
-    });
+    // Reset GSAP context and clear any existing animations
+    const ctx = gsap.context(() => {
+      // Kill any existing animations on these elements
+      gsap.killTweensOf([".success-header", ".stats-card", ".song-item"]);
+      
+      // Reset elements to visible state first
+      gsap.set([".success-header", ".stats-card", ".song-item"], { 
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        clearProps: "all" 
+      });
 
-    gsap.from(".stats-card", {
-      y: 50,
-      opacity: 0,
-      duration: 0.8,
-      stagger: 0.1,
-      delay: 0.3,
-      ease: "power3.out",
-    });
+      // Then animate them in
+      gsap.fromTo(".success-header",
+        { scale: 0.8, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 1, ease: "back.out(1.7)" }
+      );
 
-    gsap.from(".song-item", {
-      x: -30,
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.05,
-      delay: 0.6,
-      ease: "power3.out",
-    });
+      gsap.fromTo(".stats-card",
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, delay: 0.3, ease: "power3.out" }
+      );
+
+      gsap.fromTo(".song-item",
+        { x: -30, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.6, stagger: 0.05, delay: 0.6, ease: "power3.out" }
+      );
+    }, containerRef);
 
     // Celebration particles effect
     createCelebrationEffect();
-  }, []);
+
+    // Cleanup function
+    return () => ctx.revert();
+  }, [results]); // ← Key change: depend on results so it re-runs when new results come in
 
   const createCelebrationEffect = () => {
     const container = containerRef.current;
@@ -127,8 +135,8 @@ export default function TransferResults({
     : results.songs.slice(0, 5);
 
   return (
-    <div ref={containerRef} className="max-w-4xl mx-auto space-y-8 relative">
-      {/* Success Header */}
+    <div ref={containerRef} className="max-w-4xl mx-auto space-y-6 relative">
+      {/* Success Header - REDUCED SPACING */}
       <div className="success-header text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/20 rounded-full mb-4">
           <CheckCircle className="text-green-400" size={40} />
@@ -153,9 +161,9 @@ export default function TransferResults({
         </div>
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats Overview - INCREASED OPACITY */}
       <div className="grid md:grid-cols-4 gap-4">
-        <Card className="stats-card bg-green-500/20 border border-green-500/50">
+        <Card className="stats-card bg-green-500/30 backdrop-blur-md border border-green-500/40">
           <CardBody className="p-4 text-center">
             <div className="text-2xl font-bold text-green-400 mb-1">
               {results.transferredSongs}
@@ -166,7 +174,7 @@ export default function TransferResults({
           </CardBody>
         </Card>
 
-        <Card className="stats-card bg-red-500/20 border border-red-500/50">
+        <Card className="stats-card bg-red-500/30 backdrop-blur-md border border-red-500/60">
           <CardBody className="p-4 text-center">
             <div className="text-2xl font-bold text-red-400 mb-1">
               {results.failedSongs}
@@ -175,7 +183,7 @@ export default function TransferResults({
           </CardBody>
         </Card>
 
-        <Card className="stats-card bg-blue-500/20 border border-blue-500/50">
+        <Card className="stats-card bg-blue-500/30 backdrop-blur-md border border-blue-500/60">
           <CardBody className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-400 mb-1">
               {results.totalSongs}
@@ -184,7 +192,7 @@ export default function TransferResults({
           </CardBody>
         </Card>
 
-        <Card className="stats-card bg-purple-500/20 border border-purple-500/50">
+        <Card className="stats-card bg-purple-500/30 backdrop-blur-md border border-purple-500/60">
           <CardBody className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-400 mb-1">
               {successRate}%
@@ -244,8 +252,8 @@ export default function TransferResults({
         </Button>
       </div>
 
-      {/* Songs List */}
-      <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700">
+      {/* Songs List - INCREASED OPACITY */}
+      <Card className="bg-gray-800/80 backdrop-blur-md border border-gray-600/60">
         <CardBody className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -269,7 +277,7 @@ export default function TransferResults({
             {displayedSongs.map((song, index) => (
               <div
                 key={song.id}
-                className="song-item flex items-center gap-4 p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+                className="song-item flex items-center gap-4 p-4 rounded-lg bg-gray-700/60 hover:bg-gray-600/70 transition-colors border border-gray-600/40 backdrop-blur-sm"
               >
                 {/* Thumbnail */}
                 <div className="flex-shrink-0">
@@ -280,22 +288,22 @@ export default function TransferResults({
                       src={song.thumbnail}
                     />
                   ) : (
-                    <div className="w-12 h-12 bg-gray-600 rounded-md flex items-center justify-center">
-                      <Music className="text-gray-400" size={20} />
+                    <div className="w-12 h-12 bg-gray-600/80 rounded-md flex items-center justify-center border border-gray-500/50">
+                      <Music className="text-gray-300" size={20} />
                     </div>
                   )}
                 </div>
 
                 {/* Song Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">
+                  <p className="text-white font-medium truncate text-base">
                     {song.title}
                   </p>
-                  <p className="text-gray-400 text-sm truncate">
+                  <p className="text-gray-300 text-sm truncate">
                     {song.artist}
                   </p>
                   {song.album && (
-                    <p className="text-gray-500 text-xs truncate">
+                    <p className="text-gray-400 text-xs truncate">
                       {song.album}
                     </p>
                   )}
@@ -306,7 +314,7 @@ export default function TransferResults({
                   {song.status === "success" ? (
                     <>
                       <Chip
-                        className="bg-green-500/20 text-green-400"
+                        className="bg-green-500/25 text-green-300 border border-green-500/30"
                         startContent={<CheckCircle size={14} />}
                         variant="flat"
                       >
@@ -319,6 +327,7 @@ export default function TransferResults({
                             size="sm"
                             title="Open in Spotify"
                             variant="ghost"
+                            className="hover:bg-white/10"
                             onPress={() =>
                               window.open(song.spotifyUrl, "_blank")
                             }
@@ -332,6 +341,7 @@ export default function TransferResults({
                             size="sm"
                             title="Open original YouTube video"
                             variant="ghost"
+                            className="hover:bg-white/10"
                             onPress={() =>
                               window.open(song.youtubeUrl, "_blank")
                             }
@@ -351,7 +361,7 @@ export default function TransferResults({
                   ) : (
                     <>
                       <Chip
-                        className="bg-red-500/20 text-red-400"
+                        className="bg-red-500/25 text-red-300 border border-red-500/30"
                         startContent={<XCircle size={14} />}
                         variant="flat"
                       >
@@ -363,6 +373,7 @@ export default function TransferResults({
                           size="sm"
                           title="Open original YouTube video"
                           variant="ghost"
+                          className="hover:bg-white/10"
                           onPress={() => window.open(song.youtubeUrl, "_blank")}
                         >
                           <svg
@@ -384,12 +395,12 @@ export default function TransferResults({
 
           {results.failedSongs > 0 && (
             <>
-              <Divider className="my-6 bg-gray-600" />
-              <div className="text-center">
-                <p className="text-gray-400 text-sm mb-2">
+              <Divider className="my-6 bg-gray-500/60" />
+              <div className="text-center p-4 bg-gray-700/40 rounded-lg border border-gray-600/40 backdrop-blur-sm">
+                <p className="text-gray-200 text-sm mb-2 font-medium">
                   {results.failedSongs} songs couldn&apos;t be found on Spotify
                 </p>
-                <p className="text-gray-500 text-xs">
+                <p className="text-gray-400 text-xs">
                   This usually happens when songs are not available in your
                   region or have different titles. You can click the YouTube
                   icon to find them manually.
@@ -400,47 +411,47 @@ export default function TransferResults({
         </CardBody>
       </Card>
 
-      {/* Performance Stats */}
-      <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30">
+      {/* Performance Stats - INCREASED OPACITY */}
+      <Card className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-md border border-blue-500/50">
         <CardBody className="p-6">
           <h4 className="text-lg font-semibold text-white mb-3">
-            Transfer Statistics
+            📊 Transfer Statistics
           </h4>
-          <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
-            <div>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-blue-400 mb-1">Processing Speed</p>
-              <p>
+              <p className="text-gray-200">
                 {(results.transferDuration / results.totalSongs).toFixed(1)}s
                 per song
               </p>
             </div>
-            <div>
+            <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-green-400 mb-1">Match Accuracy</p>
-              <p>{successRate}% of songs found successfully</p>
+              <p className="text-gray-200">{successRate}% of songs found successfully</p>
             </div>
-            <div>
+            <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-purple-400 mb-1">Total Duration</p>
-              <p>{formatDuration(results.transferDuration)}</p>
+              <p className="text-gray-200">{formatDuration(results.transferDuration)}</p>
             </div>
           </div>
         </CardBody>
       </Card>
 
-      {/* Tips Card */}
-      <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/30">
+      {/* Tips Card - INCREASED OPACITY */}
+      <Card className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-md border border-green-500/50">
         <CardBody className="p-6">
           <h4 className="text-lg font-semibold text-white mb-3">💡 Pro Tips</h4>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-300">
-            <div>
+          <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-green-400 mb-1">Missing songs?</p>
-              <p>
+              <p className="text-gray-200">
                 Click the YouTube icon next to failed songs to find and add them
                 manually to your Spotify playlist.
               </p>
             </div>
-            <div>
+            <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-blue-400 mb-1">Love the tool?</p>
-              <p>
+              <p className="text-gray-200">
                 Share it with friends who also want to transfer their playlists!
                 The more the merrier.
               </p>

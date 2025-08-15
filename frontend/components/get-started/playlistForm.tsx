@@ -21,16 +21,21 @@ import {
 import { gsap } from "gsap";
 
 import { PlaylistDataProps, PlaylistFormProps } from "@/types";
-import { youtubeAPI } from "@/utils/api_routes.ts/api";
 
 export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [formData, setFormData] = useState<PlaylistDataProps>({
+
+  // Create fresh initial state function to avoid reference issues
+  const createInitialFormData = (): PlaylistDataProps => ({
     url: "",
     name: "",
     description: "",
     isPublic: true,
   });
+
+  const [formData, setFormData] = useState<PlaylistDataProps>(
+    createInitialFormData(),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<PlaylistDataProps>>({});
   const [isValidatingUrl, setIsValidatingUrl] = useState(false);
@@ -40,31 +45,53 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
 
   useEffect(() => {
-    // Animate form fields
-    gsap.from(".form-field", {
-      y: 30,
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.1,
-      ease: "power3.out",
-    });
+    console.log("[PlaylistForm] - Component mounted/remounted");
 
-    gsap.from(".form-card", {
-      scale: 0.95,
-      opacity: 0,
-      duration: 0.8,
-      ease: "back.out(1.7)",
-    });
+    // Force reset with new object reference
+    setFormData(createInitialFormData());
+    setErrors({});
+    setIsLoading(false);
+    setIsValidatingUrl(false);
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      // Kill any existing animations first
+      gsap.killTweensOf([".form-field", ".form-card"]);
+
+      // Check if elements exist before animating
+      const formFields = document.querySelectorAll(".form-field");
+      const formCard = document.querySelector(".form-card");
+
+      if (formFields.length > 0) {
+        gsap.fromTo(
+          ".form-field",
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: "power3.out" },
+        );
+      }
+
+      if (formCard) {
+        gsap.fromTo(
+          ".form-card",
+          { scale: 0.95, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" },
+        );
+      }
+    }, 100);
 
     // Test backend connection on component mount
     testBackendConnection();
-  }, []);
+
+    return () => {
+      clearTimeout(timeoutId);
+      gsap.killTweensOf([".form-field", ".form-card"]);
+    };
+  }, []); // Remove dependencies to only run on mount
 
   const testBackendConnection = async () => {
+    console.log("[PlaylistForm] - Testing backend connection...");
     setIsTestingConnection(true);
     try {
-      console.log("Testing backend connection...");
-
       const response = await fetch("http://localhost:8000/", {
         method: "GET",
         headers: {
@@ -75,14 +102,17 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
       if (response.ok) {
         const data = await response.json();
 
-        console.log("✅ Backend connected:", data);
+        console.log("[PlaylistForm] - Backend connected:", data);
         setBackendStatus("connected");
       } else {
-        console.error("❌ Backend returned error:", response.status);
+        console.error(
+          "[PlaylistForm] - Backend returned error:",
+          response.status,
+        );
         setBackendStatus("disconnected");
       }
     } catch (error) {
-      console.error("❌ Backend connection failed:", error);
+      console.error("[PlaylistForm] - Backend connection failed:", error);
       setBackendStatus("disconnected");
     } finally {
       setIsTestingConnection(false);
@@ -90,6 +120,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   };
 
   const validateForm = async (): Promise<boolean> => {
+    console.log("[PlaylistForm] - Validating form data:", formData);
     const newErrors: Partial<PlaylistDataProps> = {};
 
     if (!formData.url.trim()) {
@@ -104,7 +135,11 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+
+    console.log("[PlaylistForm] - Form validation result:", isValid, newErrors);
+
+    return isValid;
   };
 
   const isValidYouTubeURL = (url: string): boolean => {
@@ -117,9 +152,11 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[PlaylistForm] - Form submitted with data:", formData);
 
     // Check backend connection before submitting
     if (backendStatus !== "connected") {
+      console.error("[PlaylistForm] - Backend not connected, aborting submit");
       setErrors({
         url: "Backend server is not connected. Please check if your FastAPI server is running.",
       });
@@ -129,19 +166,28 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
     const isValid = await validateForm();
 
-    if (!isValid) return;
+    if (!isValid) {
+      console.error("[PlaylistForm] - Form validation failed, aborting submit");
+
+      return;
+    }
 
     setIsLoading(true);
 
     // Add loading animation
-    gsap.to(".submit-button", {
-      scale: 0.95,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
-    });
+    const submitButton = document.querySelector(".submit-button");
+
+    if (submitButton) {
+      gsap.to(".submit-button", {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+      });
+    }
 
     setTimeout(() => {
+      console.log("[PlaylistForm] - Calling onSubmit with data:", formData);
       onSubmit(formData);
     }, 500);
   };
@@ -150,6 +196,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     field: keyof PlaylistDataProps,
     value: string | boolean,
   ) => {
+    console.log(`[PlaylistForm] - Input changed: ${field} = ${value}`);
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear error when user starts typing
@@ -181,7 +228,10 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div
+      className="max-w-2xl mx-auto"
+      style={{ display: "block", visibility: "visible", opacity: 1 }}
+    >
       {/* Connection Status Card */}
       <Card className="mb-6 bg-gray-800/30 border border-gray-700">
         <CardBody className="p-4">
@@ -414,9 +464,10 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
                   "http://localhost:8000"}
               </p>
               <p>
-                Form Valid: {Object.keys(errors).length === 0 ? "✅" : "❌"}
+                Form Valid: {Object.keys(errors).length === 0 ? "Yes" : "No"}
               </p>
               <p>Current Errors: {JSON.stringify(errors)}</p>
+              <p>Form Data: {JSON.stringify(formData)}</p>
             </div>
           </CardBody>
         </Card>
