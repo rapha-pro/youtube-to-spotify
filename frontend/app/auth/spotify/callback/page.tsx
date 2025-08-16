@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Card, CardBody, Spinner } from "@heroui/react";
 import { CheckCircle, XCircle, ArrowLeft } from "lucide-react";
-import axios from "axios";
+
+import { callbackHandlers } from "@/utils/api_routes.ts/api";
 
 export default function SpotifyCallback() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
@@ -23,91 +23,25 @@ export default function SpotifyCallback() {
 
   const handleCallback = async () => {
     try {
-      // Get parameters from URL
-      const code = searchParams.get("code");
-      const state = searchParams.get("state");
-      const error = searchParams.get("error");
-
-      console.log("[SpotifyCallback] - URL parameters:", {
-        code: !!code,
-        state,
-        error,
-      });
-
-      // Check for errors from Spotify
-      if (error) {
-        throw new Error(`Spotify error: ${error}`);
-      }
-
-      // Check if we have authorization code
-      if (!code) {
-        throw new Error("No authorization code received from Spotify");
-      }
-
-      // Verify state parameter for security
-      const storedState = localStorage.getItem("oauth_state");
-
-      if (state !== storedState) {
-        throw new Error("Invalid state parameter - possible CSRF attack");
-      }
-
-      console.log(
-        "[SpotifyCallback] - Sending code to backend for token exchange",
-      );
       setMessage("Exchanging authorization code for access token...");
 
-      // Send code to your backend to exchange for access token
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/spotify/callback`,
-        {
-          code: code,
-          redirect_uri: `${window.location.origin}/auth/spotify/callback`,
-        },
-      );
+      // Use the centralized callback handler
+      const result = await callbackHandlers.handleSpotifyCallback(searchParams);
 
-      const data = response.data;
+      setStatus(result.status);
+      setMessage(result.message);
 
-      console.log("[SpotifyCallback] - Token exchange successful:", data);
-
-      // Store tokens in localStorage
-      localStorage.setItem("spotify_access_token", data.access_token);
-      if (data.refresh_token) {
-        localStorage.setItem("spotify_refresh_token", data.refresh_token);
+      // Redirect back to home page after 2 seconds on success
+      if (result.status === "success") {
+        setTimeout(() => {
+          console.log("[SpotifyCallback] - Redirecting to home page");
+          window.location.href = "/";
+        }, 2000);
       }
-
-      // Store user info if provided
-      if (data.user_info) {
-        localStorage.setItem("spotify_user", JSON.stringify(data.user_info));
-      }
-
-      // Clean up OAuth state
-      localStorage.removeItem("oauth_state");
-
-      setStatus("success");
-      setMessage("Successfully connected to Spotify!");
-
-      // Redirect back to home page after 2 seconds
-      setTimeout(() => {
-        console.log("[SpotifyCallback] - Redirecting to home page");
-        window.location.href = "/";
-      }, 2000);
     } catch (error) {
-      console.error("[SpotifyCallback] - Authentication failed:", error);
+      console.error("[SpotifyCallback] - Unexpected error:", error);
       setStatus("error");
-
-      // Better error handling with axios
-      if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.detail ||
-          error.response?.data?.message ||
-          `HTTP ${error.response?.status}: ${error.message}`;
-
-        setMessage(`Authentication failed: ${errorMessage}`);
-      } else {
-        setMessage(
-          error instanceof Error ? error.message : "Authentication failed",
-        );
-      }
+      setMessage("An unexpected error occurred");
     }
   };
 

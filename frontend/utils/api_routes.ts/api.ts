@@ -21,7 +21,7 @@ const api = axios.create({
 // Request interceptor for logging
 api.interceptors.request.use((config) => {
   console.log(
-    `Making ${config.method?.toUpperCase()} request to ${config.url}`,
+    `[API] - Making ${config.method?.toUpperCase()} request to ${config.url}`,
   );
 
   return config;
@@ -31,26 +31,432 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API Error:", error.response?.data || error.message);
+    console.error("[API] - Error:", error.response?.data || error.message);
 
     return Promise.reject(error);
   },
 );
 
-// API functions
+// Authentication API functions
+export const authAPI = {
+  /**
+   * Check backend OAuth configuration status
+   */
+  checkStatus: async (): Promise<{
+    spotify_configured: boolean;
+    youtube_configured: boolean;
+    message: string;
+  }> => {
+    console.log("[authAPI] - Checking backend OAuth status");
+    const response = await api.get("/auth/status");
+
+    return response.data;
+  },
+
+  /**
+   * Exchange Spotify authorization code for access token
+   */
+  spotifyCallback: async (
+    code: string,
+    redirectUri: string,
+  ): Promise<{
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+    scope: string;
+    user_info?: any;
+  }> => {
+    console.log("[authAPI] - Exchanging Spotify authorization code");
+    const response = await api.post("/auth/spotify/callback", {
+      code,
+      redirect_uri: redirectUri,
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Exchange YouTube authorization code for access token
+   */
+  youtubeCallback: async (
+    code: string,
+    redirectUri: string,
+  ): Promise<{
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+    scope: string;
+    user_info?: any;
+  }> => {
+    console.log("[authAPI] - Exchanging YouTube authorization code");
+    const response = await api.post("/auth/youtube/callback", {
+      code,
+      redirect_uri: redirectUri,
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Generate Spotify OAuth URL
+   */
+  generateSpotifyAuthUrl: (state: string): string => {
+    console.log("[authAPI] - Generating Spotify OAuth URL");
+
+    const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/spotify/callback`;
+    const scopes = [
+      "playlist-modify-public",
+      "playlist-modify-private",
+      "playlist-read-private",
+      "user-read-private",
+    ].join(" ");
+
+    if (!clientId) {
+      throw new Error("Spotify client ID not configured", clientId);
+    }
+
+    const authUrl = new URL("https://accounts.spotify.com/authorize");
+
+    authUrl.searchParams.append("client_id", clientId);
+    authUrl.searchParams.append("response_type", "code");
+    authUrl.searchParams.append("redirect_uri", redirectUri);
+    authUrl.searchParams.append("scope", scopes);
+    authUrl.searchParams.append("state", state);
+
+    return authUrl.toString();
+  },
+
+  /**
+   * Generate YouTube OAuth URL
+   */
+  generateYouTubeAuthUrl: (state: string): string => {
+    console.log("[authAPI] - Generating YouTube OAuth URL");
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/youtube/callback`;
+    const scopes = ["https://www.googleapis.com/auth/youtube.readonly"].join(
+      " ",
+    );
+
+    if (!clientId) {
+      throw new Error("Google client ID not configured");
+    }
+
+    const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+
+    authUrl.searchParams.append("client_id", clientId);
+    authUrl.searchParams.append("response_type", "code");
+    authUrl.searchParams.append("redirect_uri", redirectUri);
+    authUrl.searchParams.append("scope", scopes);
+    authUrl.searchParams.append("state", state);
+    authUrl.searchParams.append("access_type", "offline");
+
+    return authUrl.toString();
+  },
+};
+
+// Token management utilities
+export const tokenManager = {
+  /**
+   * Check if user has valid authentication tokens
+   */
+  getAuthStatus: (): {
+    spotify: boolean;
+    youtube: boolean;
+  } => {
+    console.log("[tokenManager] - Checking stored auth tokens");
+
+    const spotifyToken = localStorage.getItem("spotify_access_token");
+    const youtubeToken = localStorage.getItem("youtube_access_token");
+
+    return {
+      spotify: !!spotifyToken,
+      youtube: !!youtubeToken,
+    };
+  },
+
+  /**
+   * Store Spotify tokens
+   */
+  storeSpotifyTokens: (data: {
+    access_token: string;
+    refresh_token?: string;
+    user_info?: any;
+  }): void => {
+    console.log("[tokenManager] - Storing Spotify tokens");
+
+    localStorage.setItem("spotify_access_token", data.access_token);
+    if (data.refresh_token) {
+      localStorage.setItem("spotify_refresh_token", data.refresh_token);
+    }
+    if (data.user_info) {
+      localStorage.setItem("spotify_user", JSON.stringify(data.user_info));
+    }
+  },
+
+  /**
+   * Store YouTube tokens
+   */
+  storeYouTubeTokens: (data: {
+    access_token: string;
+    refresh_token?: string;
+    user_info?: any;
+  }): void => {
+    console.log("[tokenManager] - Storing YouTube tokens");
+
+    localStorage.setItem("youtube_access_token", data.access_token);
+    if (data.refresh_token) {
+      localStorage.setItem("youtube_refresh_token", data.refresh_token);
+    }
+    if (data.user_info) {
+      localStorage.setItem("youtube_user", JSON.stringify(data.user_info));
+    }
+  },
+
+  /**
+   * Clear Spotify tokens
+   */
+  clearSpotifyTokens: (): void => {
+    console.log("[tokenManager] - Clearing Spotify tokens");
+
+    localStorage.removeItem("spotify_access_token");
+    localStorage.removeItem("spotify_refresh_token");
+    localStorage.removeItem("spotify_user");
+  },
+
+  /**
+   * Clear YouTube tokens
+   */
+  clearYouTubeTokens: (): void => {
+    console.log("[tokenManager] - Clearing YouTube tokens");
+
+    localStorage.removeItem("youtube_access_token");
+    localStorage.removeItem("youtube_refresh_token");
+    localStorage.removeItem("youtube_user");
+  },
+
+  /**
+   * Get stored user info
+   */
+  getUserInfo: (platform: "spotify" | "youtube"): any | null => {
+    const userJson = localStorage.getItem(`${platform}_user`);
+
+    return userJson ? JSON.parse(userJson) : null;
+  },
+};
+
+// OAuth flow utilities
+export const oauthFlow = {
+  /**
+   * Start Spotify OAuth flow
+   */
+  startSpotifyAuth: (): void => {
+    console.log("[oauthFlow] - Starting Spotify OAuth flow");
+
+    try {
+      const state = Math.random().toString(36).substring(2, 15);
+
+      localStorage.setItem("oauth_state", state);
+
+      const authUrl = authAPI.generateSpotifyAuthUrl(state);
+
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("[oauthFlow] - Failed to start Spotify auth:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Start YouTube OAuth flow
+   */
+  startYouTubeAuth: (): void => {
+    console.log("[oauthFlow] - Starting YouTube OAuth flow");
+
+    try {
+      const state = Math.random().toString(36).substring(2, 15);
+
+      localStorage.setItem("oauth_state", state);
+
+      const authUrl = authAPI.generateYouTubeAuthUrl(state);
+
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("[oauthFlow] - Failed to start YouTube auth:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Handle OAuth callback (for callback pages)
+   */
+  handleCallback: async (
+    platform: "spotify" | "youtube",
+    code: string,
+    state: string,
+  ): Promise<void> => {
+    console.log(`[oauthFlow] - Handling ${platform} OAuth callback`);
+
+    // Verify state parameter for security
+    const storedState = localStorage.getItem("oauth_state");
+
+    if (state !== storedState) {
+      throw new Error("Invalid state parameter - possible CSRF attack");
+    }
+
+    const redirectUri = `${window.location.origin}/auth/${platform}/callback`;
+
+    try {
+      let tokenData;
+
+      if (platform === "spotify") {
+        tokenData = await authAPI.spotifyCallback(code, redirectUri);
+        tokenManager.storeSpotifyTokens(tokenData);
+      } else {
+        tokenData = await authAPI.youtubeCallback(code, redirectUri);
+        tokenManager.storeYouTubeTokens(tokenData);
+      }
+
+      // Clean up OAuth state
+      localStorage.removeItem("oauth_state");
+
+      console.log(`[oauthFlow] - ${platform} authentication successful`);
+      // No return - function completes successfully
+    } catch (error) {
+      console.error(`[oauthFlow] - ${platform} authentication failed:`, error);
+      throw error;
+    }
+  },
+};
+
+// OAuth callback handlers (for callback pages)
+export const callbackHandlers = {
+  /**
+   * Handle Spotify OAuth callback - complete flow
+   */
+  handleSpotifyCallback: async (
+    searchParams: URLSearchParams,
+  ): Promise<{
+    status: "success" | "error";
+    message: string;
+  }> => {
+    try {
+      console.log("[callbackHandlers] - Processing Spotify OAuth callback");
+
+      // Extract URL parameters
+      const code = searchParams.get("code");
+      const state = searchParams.get("state");
+      const error = searchParams.get("error");
+
+      console.log("[callbackHandlers] - URL parameters:", {
+        code: !!code,
+        state,
+        error,
+      });
+
+      // Check for errors from Spotify
+      if (error) {
+        throw new Error(`Spotify error: ${error}`);
+      }
+
+      if (!code || !state) {
+        throw new Error("Missing required parameters from Spotify");
+      }
+
+      // Use the centralized OAuth flow handler
+      await oauthFlow.handleCallback("spotify", code, state);
+
+      return {
+        status: "success",
+        message: "Successfully connected to Spotify!",
+      };
+    } catch (error) {
+      console.error(
+        "[callbackHandlers] - Spotify authentication failed:",
+        error,
+      );
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      return {
+        status: "error",
+        message: `Authentication failed: ${errorMessage}`,
+      };
+    }
+  },
+
+  /**
+   * Handle YouTube OAuth callback - complete flow
+   */
+  handleYouTubeCallback: async (
+    searchParams: URLSearchParams,
+  ): Promise<{
+    status: "success" | "error";
+    message: string;
+  }> => {
+    try {
+      console.log("[callbackHandlers] - Processing YouTube OAuth callback");
+
+      // Extract URL parameters
+      const code = searchParams.get("code");
+      const state = searchParams.get("state");
+      const error = searchParams.get("error");
+
+      console.log("[callbackHandlers] - URL parameters:", {
+        code: !!code,
+        state,
+        error,
+      });
+
+      // Check for errors from Google
+      if (error) {
+        throw new Error(`Google error: ${error}`);
+      }
+
+      if (!code || !state) {
+        throw new Error("Missing required parameters from Google");
+      }
+
+      // Use the centralized OAuth flow handler
+      await oauthFlow.handleCallback("youtube", code, state);
+
+      return {
+        status: "success",
+        message: "Successfully connected to YouTube!",
+      };
+    } catch (error) {
+      console.error(
+        "[callbackHandlers] - YouTube authentication failed:",
+        error,
+      );
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+
+      return {
+        status: "error",
+        message: `Authentication failed: ${errorMessage}`,
+      };
+    }
+  },
+};
+
+
 
 /**
- * Direct transfer to match backend endpoint
- * @param data - Playlist transfer request data
- * @returns Transfer result response
- * @throws Error if the transfer fails
+ * Transfer API functions
+ * These handle the actual playlist transfer logic and communicate with the backend.
  */
 export const transferAPI = {
   // Direct transfer using POST with enhanced backend
   directTransfer: async (
     data: PlaylistTransferRequestProps,
   ): Promise<TransferResultResponseProps> => {
-    console.log("Sending transfer request:", data);
+    console.log("[transferAPI] - Sending transfer request:", data);
 
     const response = await api.post("/transfer", {
       playlist_url: data.url,
@@ -59,7 +465,7 @@ export const transferAPI = {
       description: data.description || "",
     });
 
-    console.log("📦 Backend response:", response.data);
+    console.log("[transferAPI] - Backend response:", response.data);
 
     // Backend now returns the exact format we need!
     const backendData = response.data;

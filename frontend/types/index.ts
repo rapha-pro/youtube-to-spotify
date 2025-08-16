@@ -104,3 +104,8 @@ export interface ProgressStepProps {
   status: "pending" | "active" | "completed";
   icon: React.ReactNode;
 }
+
+export interface AuthStatus {
+  spotify: boolean;
+  youtube: boolean;
+}
