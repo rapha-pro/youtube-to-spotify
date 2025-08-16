@@ -1,0 +1,215 @@
+# backend/api/auth.py
+
+import os
+import requests
+from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
+import json
+from typing import Dict, Any
+
+from backend.models.oauth import (
+    OAuthCallbackRequest, 
+    SpotifyTokenResponse, 
+    YouTubeTokenResponse,
+    UserInfo,
+    OAuthError
+)
+
+router = APIRouter()
+
+@router.post("/spotify/callback", response_model=SpotifyTokenResponse)
+async def spotify_oauth_callback(request: OAuthCallbackRequest):
+    """
+    Exchange Spotify authorization code for access token
+
+    Args:
+        request: OAuthCallbackRequest containing the authorization code and redirect URI.
+    Returns:
+        SpotifyTokenResponse: Contains the access token, refresh token, user info, and other details
+    """
+    try:
+        print(f"[SpotifyOAuth] - Received callback request: code={request.code[:10]}..., redirect_uri={request.redirect_uri}")
+        
+        # Spotify token exchange endpoint
+        token_url = "https://accounts.spotify.com/api/token"
+        
+        # Prepare token exchange data
+        token_data = {
+            "grant_type": "authorization_code",
+            "code": request.code,
+            "redirect_uri": request.redirect_uri,
+            "client_id": os.getenv("SPOTIFY_CLIENT_ID"),
+            "client_secret": os.getenv("SPOTIFY_CLIENT_SECRET"),
+        }
+        
+        print(f"[SpotifyOAuth] - Exchanging code for token with Spotify")
+        
+        # Exchange code for token
+        response = requests.post(token_url, data=token_data)
+        
+        if not response.ok:
+            error_data = response.json() if response.headers.get('content-type') == 'application/json' else {}
+            print(f"[SpotifyOAuth] - Token exchange failed: {response.status_code}, {error_data}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Spotify token exchange failed: {error_data.get('error_description', response.text)}"
+            )
+        
+        token_response = response.json()
+        print(f"[SpotifyOAuth] - Token exchange successful")
+        
+        # Get user info using the access token
+        user_info = None
+        try:
+            user_response = requests.get(
+                "https://api.spotify.com/v1/me",
+                headers={"Authorization": f"Bearer {token_response['access_token']}"}
+            )
+            if user_response.ok:
+                user_data = user_response.json()
+                user_info = {
+                    "id": user_data["id"],
+                    "name": user_data["display_name"],
+                    "email": user_data.get("email"),
+                    "image": user_data["images"][0]["url"] if user_data["images"] else None,
+                    "platform": "spotify"
+                }
+                print(f"[SpotifyOAuth] - Retrieved user info for: {user_info['name']}")
+        except Exception as e:
+            print(f"[SpotifyOAuth] - Failed to get user info: {e}")
+        
+        return SpotifyTokenResponse(
+            access_token=token_response["access_token"],
+            refresh_token=token_response.get("refresh_token"),
+            expires_in=token_response["expires_in"],
+            token_type=token_response["token_type"],
+            scope=token_response["scope"],
+            user_info=user_info
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[SpotifyOAuth] - Unexpected error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OAuth callback failed: {str(e)}"
+        )
+
+@router.post("/youtube/callback", response_model=YouTubeTokenResponse)
+async def youtube_oauth_callback(request: OAuthCallbackRequest):
+    """
+    Exchange Google/YouTube authorization code for access token
+    Args:
+        request: OAuthCallbackRequest containing the authorization code and redirect URI.
+    Returns:
+        YouTubeTokenResponse: Contains the access token, refresh token, user info, and other
+    """
+    try:
+        print(f"[YouTubeOAuth] - Received callback request: code={request.code[:10]}..., redirect_uri={request.redirect_uri}")
+        
+        # Load Google client secrets
+        google_secrets_path = os.getenv("YOUTUBE_CLIENT_JSON")
+        if not google_secrets_path or not os.path.exists(google_secrets_path):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google client secrets file not found"
+            )
+        
+        with open(google_secrets_path, 'r') as f:
+            google_secrets = json.load(f)
+        
+        client_info = google_secrets.get("web") or google_secrets.get("installed")
+        if not client_info:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Invalid Google client secrets format"
+            )
+        
+        # Google token exchange endpoint
+        token_url = "https://oauth2.googleapis.com/token"
+        
+        # Prepare token exchange data
+        token_data = {
+            "grant_type": "authorization_code",
+            "code": request.code,
+            "redirect_uri": request.redirect_uri,
+            "client_id": client_info["client_id"],
+            "client_secret": client_info["client_secret"],
+        }
+        
+        print(f"[YouTubeOAuth] - Exchanging code for token with Google")
+        
+        # Exchange code for token
+        response = requests.post(token_url, data=token_data)
+        
+        if not response.ok:
+            error_data = response.json() if response.headers.get('content-type') == 'application/json' else {}
+            print(f"[YouTubeOAuth] - Token exchange failed: {response.status_code}, {error_data}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Google token exchange failed: {error_data.get('error_description', response.text)}"
+            )
+        
+        token_response = response.json()
+        print(f"[YouTubeOAuth] - Token exchange successful")
+        
+        # Get user info using the access token
+        user_info = None
+        try:
+            user_response = requests.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={"Authorization": f"Bearer {token_response['access_token']}"}
+            )
+            if user_response.ok:
+                user_data = user_response.json()
+                user_info = {
+                    "id": user_data["id"],
+                    "name": user_data["name"],
+                    "email": user_data.get("email"),
+                    "image": user_data.get("picture"),
+                    "platform": "youtube"
+                }
+                print(f"[YouTubeOAuth] - Retrieved user info for: {user_info['name']}")
+        except Exception as e:
+            print(f"[YouTubeOAuth] - Failed to get user info: {e}")
+        
+        return YouTubeTokenResponse(
+            access_token=token_response["access_token"],
+            refresh_token=token_response.get("refresh_token"),
+            expires_in=token_response["expires_in"],
+            token_type=token_response["token_type"],
+            scope=token_response["scope"],
+            user_info=user_info
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[YouTubeOAuth] - Unexpected error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OAuth callback failed: {str(e)}"
+        )
+
+@router.get("/status")
+async def auth_status():
+    """
+    Check if OAuth credentials are configured correctly
+    """
+    try:
+        status_info = {
+            "spotify_configured": bool(os.getenv("SPOTIFY_CLIENT_ID") and os.getenv("SPOTIFY_CLIENT_SECRET")),
+            "youtube_configured": bool(os.getenv("YOUTUBE_CLIENT_JSON") and os.path.exists(os.getenv("YOUTUBE_CLIENT_JSON", ""))),
+            "message": "OAuth configuration status"
+        }
+        
+        print(f"[AuthStatus] - Configuration check: {status_info}")
+        return status_info
+        
+    except Exception as e:
+        print(f"[AuthStatus] - Error checking status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check auth status: {str(e)}"
+        )

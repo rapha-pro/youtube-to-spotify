@@ -6,6 +6,7 @@ import { Music, Search, CheckCircle, Download, Loader2 } from "lucide-react";
 import { gsap } from "gsap";
 
 import { ProgressStepProps, PlaylistTransferRequestProps } from "@/types";
+import { stat } from "fs";
 
 interface TransferProgressProps {
   playlistData: PlaylistTransferRequestProps;
@@ -24,11 +25,11 @@ export default function TransferProgress({
   const [currentMessage, setCurrentMessage] = useState("Starting transfer...");
   const progressTime = 1000;
 
-  console.log("🎵 TransferProgress rendered:", { 
-    playlistName: playlistData.name, 
+  console.log("🎵 TransferProgress rendered:", {
+    playlistName: playlistData.name,
     isTransferring,
     currentStep: currentStepIndex,
-    progress: Math.round(progress)
+    progress: Math.round(progress),
   });
 
   const steps: ProgressStepProps[] = [
@@ -70,30 +71,39 @@ export default function TransferProgress({
 
   useEffect(() => {
     console.log("🎬 TransferProgress useEffect (animations) triggered");
-    
+
     // Reset GSAP context and clear any existing animations
     const ctx = gsap.context(() => {
       // Kill any existing animations
       gsap.killTweensOf([".progress-container", ".step-item"]);
-      
+
       // Reset elements to visible state first
-      gsap.set([".progress-container", ".step-item"], { 
+      gsap.set([".progress-container", ".step-item"], {
         opacity: 1,
         x: 0,
         y: 0,
         scale: 1,
-        clearProps: "all" 
+        clearProps: "all",
       });
 
       // Then animate them in
-      gsap.fromTo(".progress-container",
+      gsap.fromTo(
+        ".progress-container",
         { scale: 0.9, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" }
+        { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)" },
       );
 
-      gsap.fromTo(".step-item",
+      gsap.fromTo(
+        ".step-item",
         { x: -50, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.6, stagger: 0.1, delay: 0.3, ease: "power3.out" }
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          delay: 0.3,
+          ease: "power3.out",
+        },
       );
     }, containerRef);
 
@@ -102,10 +112,13 @@ export default function TransferProgress({
   }, []); // Only run once on mount
 
   useEffect(() => {
-    console.log("📊 TransferProgress progress simulation effect:", { isTransferring });
-    
+    console.log("TransferProgress progress simulation effect:", {
+      isTransferring,
+    });
+
     if (!isTransferring) {
       console.log("⏸ Not transferring, skipping progress simulation");
+
       return;
     }
 
@@ -172,14 +185,19 @@ export default function TransferProgress({
 
     const progressInterval = setInterval(() => {
       if (currentProgressIndex >= progressSteps.length) {
-        console.log("✅ Progress simulation completed");
+        console.log("Progress simulation completed");
         clearInterval(progressInterval);
+
         return;
       }
 
       const currentProgressStep = progressSteps[currentProgressIndex];
-      
-      console.log(`📈 Progress step ${currentProgressIndex}:`, currentProgressStep.message, `${currentProgressStep.progress}%`);
+
+      console.log(
+        `Progress step ${currentProgressIndex}:`,
+        currentProgressStep.message,
+        `${currentProgressStep.progress}%`,
+      );
 
       // Update step, progress, and message
       setCurrentStepIndex(currentProgressStep.step);
@@ -187,13 +205,29 @@ export default function TransferProgress({
       setCurrentMessage(currentProgressStep.message);
 
       // Simulate song counting during search phase
-      if (currentProgressStep.step === 1 && songCounter < estimatedTotal * 0.8) {
-        songCounter += Math.floor(Math.random() * 3) + 1;
-        setFoundSongs(Math.min(songCounter, estimatedTotal * 0.8));
+      if (currentProgressStep.step === 1) {
+        // Increment total songs first
+        const newTotal = currentProgressIndex + 1;
+
+        setTotalSongs(currentProgressIndex + 1);
+
+        /** 
+        Normally we would calculate found songs (e.g., 80% of total)
+        const foundCount = Math.floor(newTotal * 1);
+
+        But we will use 100% for simplicity for the moment since we don't
+        have real data yet. We will show the real stats in the results page.
+        */
+        setFoundSongs(newTotal);
+
+        console.log("Songs stats:", {
+          total: newTotal,
+          found: foundSongs,
+        });
       }
 
       currentProgressIndex++;
-    }, 1500); // Update every 1.5 seconds
+    }, 1500);
 
     // Cleanup interval on unmount
     return () => {
@@ -205,6 +239,7 @@ export default function TransferProgress({
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStepIndex) return "completed";
     if (stepIndex === currentStepIndex) return "active";
+
     return "pending";
   };
 
@@ -212,7 +247,8 @@ export default function TransferProgress({
     <div ref={containerRef} className="max-w-3xl mx-auto space-y-8">
       {/* Debug Info */}
       <div className="bg-gray-800/20 p-2 rounded text-xs text-gray-500 font-mono">
-        Step={currentStepIndex}, Progress={Math.round(progress)}%, Transferring={isTransferring.toString()}
+        Step={currentStepIndex}, Progress={Math.round(progress)}%, Transferring=
+        {isTransferring.toString()}
       </div>
 
       {/* Main Progress Card */}
@@ -349,7 +385,8 @@ export default function TransferProgress({
               <h3 className="font-semibold text-white">Currently Processing</h3>
             </div>
             <p className="text-gray-400 text-sm">
-              {currentMessage} This may take a few moments depending on your playlist size.
+              {currentMessage} This may take a few moments depending on your
+              playlist size.
             </p>
           </CardBody>
         </Card>

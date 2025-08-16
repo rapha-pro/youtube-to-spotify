@@ -1,9 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import youtube, spotify, transfer
+from backend.api import youtube, spotify, transfer, auth
 
 
 tags_metadata = [
+    {
+        "name": "Authentication",
+        "description": "OAuth endpoints for Spotify and YouTube authentication."
+    },
     {
         "name": "YouTube",
         "description": "Operations related to importing/exporting playlists from YouTube."
@@ -34,6 +38,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(youtube.router, prefix="/youtube", tags=["YouTube"])
 app.include_router(spotify.router, prefix="/spotify", tags=["Spotify"])
 app.include_router(transfer.router, prefix="/transfer", tags=["Transfer"])

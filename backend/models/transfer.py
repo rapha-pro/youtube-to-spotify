@@ -1,4 +1,3 @@
-# backend/models/transfer.py
 from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 from datetime import datetime
