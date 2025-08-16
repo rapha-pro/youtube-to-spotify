@@ -11,7 +11,7 @@ export const faqData: FaqItemProps[] = [
     id: "store-credentials",
     question: "Do you store my login credentials?",
     answer:
-      "No, we use OAuth 2.0 for authentication, which means we never see or store your passwords. We only request the minimum permissions needed to transfer your playlists.",
+      "No, we use OAuth for authentication, which means we never see or store your passwords. We only request the minimum permissions needed to transfer your playlists.",
   },
   {
     id: "songs-not-found",

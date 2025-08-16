@@ -178,7 +178,7 @@ API_BASE_URL=http://localhost:8000
 **Google Cloud (YouTube)**:
 1. Create project at [Google Cloud Console](https://console.cloud.google.com)
 2. Enable YouTube Data API v3
-3. Create OAuth 2.0 credentials
+3. Create OAuth credentials
 4. Download client secret JSON file
 
 **Spotify**:
