@@ -16,7 +16,7 @@ export default function HowItWorks() {
     gsap.registerPlugin(ScrollTrigger);
 
     // Kill any existing animations and scroll triggers first
-    killAnimations(".step-card");
+    killAnimations("step-card");
 
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
@@ -60,7 +60,7 @@ export default function HowItWorks() {
     return () => {
       clearTimeout(timeoutId);
       console.log("[HowItWorks] - Cleaning up animations");
-      killAnimations(".step-card");
+      killAnimations("step-card");
     };
   }, []);
 

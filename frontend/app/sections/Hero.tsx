@@ -337,7 +337,7 @@ export default function Hero() {
       {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto max-w-6xl mt-8">
           <div className="p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-            <h4 className="text-white font-medium mb-2">OAuth Debug Info</h4>
+            <h4 className="text-yellow-400 font-medium mb-2">OAuth Debug Info</h4>
             <div className="text-xs text-gray-400 space-y-1">
               <p>
                 Spotify Client ID:{" "}
