@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Button, Card } from "@heroui/react";
 import { gsap } from "gsap";
@@ -5,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import clsx from "clsx";
 
 import { testimonials } from "@/utils/testimonials";
+import { killAnimations } from "@/utils/cleaning_animations";
 
 export default function Testimonial() {
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -13,26 +16,71 @@ export default function Testimonial() {
   const [isAnimating, setIsAnimating] = useState(false);
   const currentTestimonial = testimonials[currentIndex];
 
+
   useEffect(() => {
+    console.log("[Testimonial] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
-    gsap.from(testimonialRef.current, {
-      scrollTrigger: {
-        trigger: testimonialRef.current,
-        start: "top bottom-=50",
-      },
-      y: 100,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power3.out",
-    });
+    // Kill any existing animations and scroll triggers first
+    killAnimations(testimonialRef.current);
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      if (testimonialRef.current) {
+        console.log("[Testimonial] - Animating testimonial section");
+
+        // Reset element state first
+        gsap.set(testimonialRef.current, {
+          y: 0,
+          opacity: 1,
+          clearProps: "transform,opacity",
+        });
+
+        // Then animate from the desired start state
+        gsap.fromTo(
+          testimonialRef.current,
+          { y: 100, opacity: 0 },
+          {
+            scrollTrigger: {
+              trigger: testimonialRef.current,
+              start: "top bottom-=50",
+              id: "testimonial-main",
+            },
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+        );
+      }
+    }, 150); // Slightly longer delay for testimonial
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+      console.log("[Testimonial] - Cleaning up animations");
+      if (testimonialRef.current) {
+        gsap.killTweensOf(testimonialRef.current);
+        ScrollTrigger.getAll().forEach((trigger) => {
+          if (trigger.vars.trigger === testimonialRef.current) {
+            trigger.kill();
+          }
+        });
+      }
+      if (contentRef.current) {
+        gsap.killTweensOf(contentRef.current);
+      }
+    };
   }, []);
 
   // Function to animate testimonial change
   const changeTestimonial = (newIndex: number) => {
     if (isAnimating || newIndex === currentIndex) return;
 
+    console.log(`[Testimonial] - Changing from ${currentIndex} to ${newIndex}`);
     setIsAnimating(true);
+
+    if (!contentRef.current) return;
 
     // Animate out
     gsap.to(contentRef.current, {
@@ -53,7 +101,12 @@ export default function Testimonial() {
             y: 0,
             duration: 0.4,
             ease: "power2.out",
-            onComplete: () => setIsAnimating(false),
+            onComplete: () => {
+              console.log(
+                `[Testimonial] - Animation complete for index ${newIndex}`,
+              );
+              setIsAnimating(false);
+            },
           },
         );
       },
@@ -62,6 +115,8 @@ export default function Testimonial() {
 
   // Auto-rotate testimonials
   useEffect(() => {
+    if (isAnimating) return; // Don't set new interval if animating
+
     const interval = setInterval(() => {
       const nextIndex = (currentIndex + 1) % testimonials.length;
 
@@ -75,12 +130,14 @@ export default function Testimonial() {
     <section
       ref={testimonialRef}
       className="py-20 bg-gradient-to-b from-gray-900 to-black"
+      style={{ opacity: 1, transform: "translateY(0px)" }} // Ensure section is always visible
     >
       <div className="container mx-auto px-4 max-w-4xl">
         <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 p-8 md:p-10">
           <div
             ref={contentRef}
             className="flex flex-col items-center text-center"
+            style={{ opacity: 1, transform: "translateY(0px)" }} // Ensure content is always visible
           >
             <div className="h-16 w-16 bg-gradient-to-r from-green-400 to-purple-500 rounded-full mb-6 flex items-center justify-center">
               <div className="h-14 w-14 bg-gray-900 rounded-full flex items-center justify-center text-2xl">
@@ -88,7 +145,7 @@ export default function Testimonial() {
               </div>
             </div>
             <p className="text-xl md:text-2xl mb-6 text-gray-100 italic">
-              "{currentTestimonial.quote}"
+              &quot;{currentTestimonial.quote}&quot;
             </p>
             <div>
               <h4 className="font-bold">{currentTestimonial.name}</h4>
@@ -112,8 +169,7 @@ export default function Testimonial() {
                 )}
                 disabled={isAnimating}
                 onClick={() => changeTestimonial(index)}
-              >
-				</Button>
+              />
             ))}
           </div>
         </Card>

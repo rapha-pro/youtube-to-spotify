@@ -9,7 +9,7 @@ from backend.services.spotify_api import (
     get_spotify_client,
     api_create_playlist,
     api_search_track,
-    api_tracks_to_playlist,
+    api_add_tracks_to_playlist,
 )
 from rich.progress import Progress
 from rich.console import Console
@@ -52,13 +52,13 @@ def main():
     log_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Step 1: Get YouTube Titles
-    console.print("[bold yellow]🔍 Fetching video titles from YouTube...")
+    console.print("[bold yellow] Fetching video titles from YouTube...")
     youtube = get_authenticated_service()
     if not youtube:
         console.print("[bold red]❌ Failed to authenticate with YouTube. Check your credentials.[/bold red]")
         return
     titles = get_video_titles_from_playlist(youtube, playlist_id)
-    console.print(f"[green]✅ {len(titles)} titles fetched.\n")
+    console.print(f"[green] {len(titles)} titles fetched.\n")
 
     # Step 2: Spotify Auth
     sp = get_spotify_client()
@@ -79,10 +79,10 @@ def main():
     log_dir.mkdir(parents=True, exist_ok=True)
     unmatched_file = log_dir / f"unmatched_songs_for_{playlist_name.replace(' ', '_')}.txt"
 
-    console.print("[cyan]🎯 Searching for tracks on Spotify...\n")
+    console.print("[cyan] Searching for tracks on Spotify...\n")
 
     with Progress() as progress:
-        task = progress.add_task("🔍 Matching tracks...", total=len(titles))
+        task = progress.add_task("Matching tracks...", total=len(titles))
         for title in titles:
             track_id = api_search_track(sp, title)
             if track_id:
@@ -112,7 +112,7 @@ def main():
         console.print("\n[bold yellow]➕ Dry run: Adding tracks to Spotify playlist...")
     else:
         console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
-        api_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
+        api_add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
     console.print("[bold green]🎉 Playlist transfer complete!")
 
 

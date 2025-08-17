@@ -166,8 +166,8 @@ export default function Hero() {
     backendStatus?.spotify_configured && backendStatus?.youtube_configured;
 
   return (
-    <section ref={heroRef} className="pt-32 pb-24 px-4 md:pt-40 md:pb-32">
-      <div className="container mx-auto max-w-6xl grid md:grid-cols-2 gap-12 items-center">
+    <section ref={heroRef} className="pt-32 pb-24 px-4 lg:px-16 md:pt-40 md:pb-32">
+      <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
         <div>
           <h1 className="hero-title text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6">
             <span className="block">Transfer Your</span>
@@ -188,23 +188,6 @@ export default function Hero() {
           {/* Development-only sections */}
           {process.env.NODE_ENV === "development" && (
             <>
-              {/* Backend Configuration Warning */}
-              {backendStatus && !isBackendConfigured && (
-                <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-                  <h3 className="text-yellow-400 font-medium mb-2">
-                    Configuration Required
-                  </h3>
-                  <div className="text-sm text-yellow-300">
-                    {!backendStatus.spotify_configured && (
-                      <p>• Spotify OAuth not configured</p>
-                    )}
-                    {!backendStatus.youtube_configured && (
-                      <p>• YouTube OAuth not configured</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Authentication Status */}
               {(authStatus.spotify || authStatus.youtube) && (
                 <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
@@ -353,7 +336,7 @@ export default function Hero() {
       {/* Development Debug Info */}
       {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto max-w-6xl mt-8">
-          <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-600">
+          <div className="p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
             <h4 className="text-white font-medium mb-2">OAuth Debug Info</h4>
             <div className="text-xs text-gray-400 space-y-1">
               <p>

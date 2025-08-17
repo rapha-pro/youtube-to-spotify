@@ -26,9 +26,12 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
     if scopes is None:
         scopes = [os.getenv("YOUTUBE_SCOPE")]
 
-    client_secrets_file = os.getenv("YOUTUBE_CLIENT_JSON")
+    # Get the backend directory (root) path
+    backend_dir = Path(__file__).parent.parent
+
+    client_secrets_file = backend_dir / os.getenv("YOUTUBE_CLIENT_JSON")
+    token_path = backend_dir / "credentials/youtube_token.pickle"
     creds = None
-    token_path = "backend/credentials/youtube_token.pickle"
 
     # Load existing credentials if available
     if os.path.exists(token_path):

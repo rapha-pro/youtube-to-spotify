@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { Button } from "@heroui/react";
 import { Youtube as YoutubeIcon } from "lucide-react";
@@ -6,29 +8,68 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { SpotifyIcon } from "@/components/icons";
 import { playlistDescription } from "@/utils/site";
+import { killAnimations } from "@/utils/cleaning_animations";
 
 export default function HowItWorks() {
   useEffect(() => {
+    console.log("[HowItWorks] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
-    const steps = document.querySelectorAll(".step-card");
+    // Kill any existing animations and scroll triggers first
+    killAnimations(".step-card");
 
-    steps.forEach((step, index) => {
-      gsap.from(step, {
-        scrollTrigger: {
-          trigger: step,
-          start: "top bottom-=100",
-        },
-        x: index % 2 === 0 ? -100 : 100,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out",
-      });
-    });
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      const steps = document.querySelectorAll(".step-card");
+
+      if (steps.length > 0) {
+        console.log(`[HowItWorks] - Animating ${steps.length} step cards`);
+
+        steps.forEach((step, index) => {
+          // Reset element state first
+          gsap.set(step, {
+            x: 0,
+            opacity: 1,
+            clearProps: "transform,opacity",
+          });
+
+          // Then animate from the desired start state
+          gsap.fromTo(
+            step,
+            {
+              x: index % 2 === 0 ? -100 : 100,
+              opacity: 0,
+            },
+            {
+              scrollTrigger: {
+                trigger: step,
+                start: "top bottom-=100",
+                id: `step-${index}`, // Add ID for easier debugging
+              },
+              x: 0,
+              opacity: 1,
+              duration: 0.8,
+              ease: "power3.out",
+            },
+          );
+        });
+      }
+    }, 200); // Longer delay for how-it-works since it's further down
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+      console.log("[HowItWorks] - Cleaning up animations");
+      killAnimations(".step-card");
+    };
   }, []);
 
   return (
-    <section className="py-20 bg-black" id="how-it-works">
+    <section
+      className="py-20 bg-black"
+      id="how-it-works"
+      style={{ opacity: 1 }} // Ensure section is always visible
+    >
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
@@ -39,7 +80,10 @@ export default function HowItWorks() {
 
         <div className="space-y-16">
           {/* 1. connect YouTube */}
-          <div className="step-card grid md:grid-cols-5 gap-6 items-center">
+          <div
+            className="step-card grid md:grid-cols-5 gap-6 items-center"
+            style={{ opacity: 1, transform: "translateX(0px)" }} // Ensure step is always visible
+          >
             <div className="md:col-span-2 order-2 md:order-1">
               <div className="h-12 w-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-xl font-bold mb-4">
                 1
@@ -47,7 +91,10 @@ export default function HowItWorks() {
               <h3 className="text-2xl font-bold mb-3">Connect YouTube</h3>
               <p className="text-gray-400">
                 Login with your Google account to access your YouTube playlists.
-                We'll scan your account and show you all available playlists.
+                You should see{" "}
+                <span className="italic text-gray-500 font-bold block mt-2">
+                  &quot;Syncwave&quot; is trying to access your account
+                </span>
               </p>
             </div>
             <div className="md:col-span-3 order-1 md:order-2">
@@ -69,7 +116,10 @@ export default function HowItWorks() {
           </div>
 
           {/* 2. connect Spotify */}
-          <div className="step-card grid md:grid-cols-5 gap-6 items-center">
+          <div
+            className="step-card grid md:grid-cols-5 gap-6 items-center"
+            style={{ opacity: 1, transform: "translateX(0px)" }} // Ensure step is always visible
+          >
             <div className="md:col-span-3 order-1">
               <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
                 <div className="bg-green-900/20 border border-green-800/50 rounded-lg p-4 flex items-center gap-4">
@@ -99,7 +149,10 @@ export default function HowItWorks() {
           </div>
 
           {/* 3. Transfer playlists */}
-          <div className="step-card grid md:grid-cols-5 gap-6 items-center">
+          <div
+            className="step-card grid md:grid-cols-5 gap-6 items-center"
+            style={{ opacity: 1, transform: "translateX(0px)" }} // Ensure step is always visible
+          >
             <div className="md:col-span-2 order-2 md:order-1">
               <div className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-xl font-bold mb-4">
                 3
@@ -115,7 +168,7 @@ export default function HowItWorks() {
                 <div className="space-y-2 mb-4">
                   <div className="bg-gray-700/50 p-3 rounded flex items-center">
                     <input checked className="mr-3" type="checkbox" />
-                    <span>{ playlistDescription }</span>
+                    <span>{playlistDescription}</span>
                     <span className="ml-auto text-gray-400">42 tracks</span>
                   </div>
                   <div className="bg-gray-700/50 p-3 rounded flex items-center">
