@@ -58,7 +58,7 @@ def main():
         console.print("[bold red]❌ Failed to authenticate with YouTube. Check your credentials.[/bold red]")
         return
     titles = get_video_titles_from_playlist(youtube, playlist_id)
-    console.print(f"[green] {len(titles)} titles fetched.\n")
+    console.print(f"[green]> {len(titles)} titles fetched!\n")
 
     # Step 2: Spotify Auth
     sp = get_spotify_client()
@@ -66,8 +66,10 @@ def main():
         console.print("[bold red]❌ Failed to authenticate with Spotify. Check your credentials.[/bold red]")
         return
     playlist_description = f"{playlist_name} created on {log_timestamp}"
-    spotify_playlist_id = api_create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
-    console.print(f"[bold magenta]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")
+    spotify_playlist_json = api_create_playlist(sp, name=playlist_name, isPublic=is_public, description=playlist_description)
+    spotify_playlist_id = spotify_playlist_json.get("id", None)
+
+    console.print(f"[bold yellow]🎵 Using Spotify playlist: [bold underline]{playlist_name}\n")
 
 
     # Step 3: Search & Match tracks
@@ -75,7 +77,8 @@ def main():
     unmatched_titles = []
 
     # Create the Log directory if it does not exist
-    log_dir = Path("logs")
+    backend_dir = Path(__file__).parent.resolve()
+    log_dir = backend_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     unmatched_file = log_dir / f"unmatched_songs_for_{playlist_name.replace(' ', '_')}.txt"
 
@@ -104,29 +107,39 @@ def main():
             )
         )
     else:
-        console.print("[green]✅ All songs matched successfully!")
+        console.print("[green]All songs matched successfully!")
 
 
     # Step 5: Add Tracks
     if dry_run:
         console.print("\n[bold yellow]➕ Dry run: Adding tracks to Spotify playlist...")
     else:
-        console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
-        api_add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
+        if not spotify_playlist_id:
+            console.print("[bold red]❌ Playlist ID not found. Cannot add tracks.[/bold red]")
+            return
+        if not track_ids:
+            console.print("[bold red]❌ No tracks to add. Playlist is empty.[/bold red]")
+        else:
+            console.print("\n[bold yellow]➕ Adding tracks to Spotify playlist...")
+            api_add_tracks_to_playlist(sp, spotify_playlist_id, track_ids)
     console.print("[bold green]🎉 Playlist transfer complete!")
 
 
     # Step 6: Summary (on Terminal)
-    console.print("\n[bold blue]📊 Transfer Summary:\n")
+    external_link_to_user_playlist = spotify_playlist_json['external_urls']['spotify'] or "Not available"
 
-    summary_table = Table(title="🎵 Playlist Transfer Stats", style="bold white")
+    console.print("\n[bold blue]Transfer Summary:\n")
+
+    summary_table = Table(title="Playlist Transfer Stats", style="bold white")
     summary_table.add_column("Metric", style="cyan", no_wrap=True)
-    summary_table.add_column("Value", style="magenta")
+    summary_table.add_column("Value", style="bold yellow")
 
+    summary_table.add_row("• Playlist Name", playlist_name)
+    summary_table.add_row("• Spotify Playlist ID", spotify_playlist_id or "Not created")
+    summary_table.add_row("• Link to Spotify playlist", external_link_to_user_playlist)
     summary_table.add_row("• Total YouTube Videos", str(len(titles)))
     summary_table.add_row("• Matched on Spotify", str(len(track_ids)))
     summary_table.add_row("• Unmatched", str(len(unmatched_titles)))
-    summary_table.add_row("• Playlist Name", playlist_name)
 
     console.print(summary_table)
     console.rule("[bold green]✅ All Done!")
@@ -136,7 +149,9 @@ def main():
 
     with log_file.open("a", encoding="utf-8") as f:
         f.write("=== Playlist Transfer Summary ===\n")
-        f.write(f"Playlist: {playlist_name}\n")
+        f.write(f"Playlist Name, {playlist_name}\n")
+        f.write(f"Playlist ID: {spotify_playlist_id or 'Not created'}\n")
+        f.write(f"Link to Spotify playlist: {external_link_to_user_playlist}\n")
         f.write(f"Total YouTube Videos: {len(titles)}\n")
         f.write(f"Matched on Spotify: {len(track_ids)}\n")
         f.write(f"Unmatched: {len(unmatched_titles)}\n")
