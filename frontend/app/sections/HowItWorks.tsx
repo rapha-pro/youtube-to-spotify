@@ -93,7 +93,7 @@ export default function HowItWorks() {
                 Login with your Google account to access your YouTube playlists.
                 You should see{" "}
                 <span className="italic text-gray-500 font-bold block mt-2">
-                  &quot;Syncwave&quot; is trying to access your account
+                  &quot;Syncwave&quot; wants to access your account
                 </span>
               </p>
             </div>

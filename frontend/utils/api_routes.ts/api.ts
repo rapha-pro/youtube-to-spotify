@@ -12,7 +12,7 @@ const API_BASE_URL = config.apiBaseUrl;
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 180000, // 2-min timeout for transfers
+  timeout: 180000, // 3-min timeout for transfers
   headers: {
     "Content-Type": "application/json",
   },
@@ -458,7 +458,7 @@ export const transferAPI = {
   ): Promise<TransferResultResponseProps> => {
     console.log("[transferAPI] - Sending transfer request:", data);
 
-    const response = await api.post("/transfer", {
+    const response = await api.post("/transfer/", {
       playlist_url: data.url,
       playlist_name: data.name,
       is_public: data.isPublic,

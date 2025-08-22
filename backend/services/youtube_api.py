@@ -10,7 +10,6 @@ from urllib.parse import urlparse, parse_qs
 from typing import List
 from backend.models.transfer import YouTubeVideo
 
-load_dotenv()
 
 def get_authenticated_service(scopes: list[str] = None) -> Resource:
     """
@@ -28,10 +27,14 @@ def get_authenticated_service(scopes: list[str] = None) -> Resource:
 
     # Get the backend directory (root) path
     backend_dir = Path(__file__).parent.parent
+    load_dotenv(backend_dir / ".env")
+
+    print(f"Using client secrets file: {scopes}, {os.getenv("YOUTUBE_PLAYLIST_URL")}, {os.getenv("YOUTUBE_CLIENT_JSON")}")
 
     client_secrets_file = backend_dir / os.getenv("YOUTUBE_CLIENT_JSON")
     token_path = backend_dir / "credentials/youtube_token.pickle"
     creds = None
+
 
     # Load existing credentials if available
     if os.path.exists(token_path):
