@@ -106,7 +106,7 @@ export const authAPI = {
     console.log("[authAPI] - Generating Spotify OAuth URL");
 
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/spotify/callback`;
+    const redirectUri = `http://127.0.0.1:3000/auth/spotify/callback`;
     const scopes = [
       "playlist-modify-public",
       "playlist-modify-private",
@@ -136,7 +136,7 @@ export const authAPI = {
     console.log("[authAPI] - Generating YouTube OAuth URL");
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/youtube/callback`;
+    const redirectUri = `http://127.0.0.1:3000/auth/youtube/callback`;
     const scopes = ["https://www.googleapis.com/auth/youtube.readonly"].join(
       " ",
     );

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
-import { TvMinimalPlay, Check } from "lucide-react";
+import { TvMinimalPlay, Check, LogOut, Sparkles } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -13,6 +13,7 @@ import { AuthStatus } from "@/types";
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
+  const celebrationRef = useRef<HTMLDivElement>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatus>({
     spotify: false,
     youtube: false,
@@ -104,18 +105,74 @@ export default function Hero() {
     };
   }, []);
 
+  // Trigger celebration animation when both accounts are connected
+  useEffect(() => {
+    if (authStatus.spotify && authStatus.youtube && celebrationRef.current) {
+      triggerCelebration();
+    }
+  }, [authStatus.spotify, authStatus.youtube]);
+
+  const triggerCelebration = () => {
+    console.log("[Hero] - Triggering celebration animation");
+    
+    // Create floating particles
+    if (celebrationRef.current) {
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement("div");
+        particle.className = "absolute w-3 h-3 rounded-full opacity-0";
+        particle.style.background = i % 2 === 0 ? "#22c55e" : "#3b82f6";
+        particle.style.left = "50%";
+        particle.style.top = "50%";
+        celebrationRef.current.appendChild(particle);
+
+        gsap.to(particle, {
+          x: (Math.random() - 0.5) * 200,
+          y: (Math.random() - 0.5) * 200,
+          opacity: 1,
+          scale: Math.random() * 1.5 + 0.5,
+          duration: 2,
+          ease: "power2.out",
+          onComplete: () => {
+            particle.remove();
+          },
+        });
+      }
+    }
+
+    // Animate the celebration text
+    gsap.fromTo(".celebration-text", 
+      { scale: 0, opacity: 0, rotation: -10 },
+      { 
+        scale: 1, 
+        opacity: 1, 
+        rotation: 0,
+        duration: 1,
+        ease: "back.out(1.7)",
+        onComplete: () => {
+          // Auto-hide after 3 seconds
+          setTimeout(() => {
+            gsap.to(".celebration-text", {
+              scale: 0.8,
+              opacity: 0,
+              duration: 0.5,
+              ease: "power2.in"
+            });
+          }, 3000);
+        }
+      }
+    );
+  };
+
   const checkAuthStatus = async () => {
     console.log("[Hero] - Checking authentication status");
 
     // Check local storage for tokens
     const localAuthStatus = tokenManager.getAuthStatus();
-
     setAuthStatus(localAuthStatus);
 
     // Check backend OAuth configuration
     try {
       const status = await authAPI.checkStatus();
-
       setBackendStatus(status);
       console.log("[Hero] - Backend OAuth status:", status);
     } catch (error) {
@@ -149,7 +206,11 @@ export default function Hero() {
     }
   };
 
-  const handleLogout = (service: "spotify" | "youtube") => {
+  const handleLogout = (service: "spotify" | "youtube", event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation(); // Prevent button click propagation
+    }
+    
     console.log(`[Hero] - Logging out from ${service}`);
 
     if (service === "spotify") {
@@ -162,8 +223,26 @@ export default function Hero() {
   };
 
   const canProceed = authStatus.spotify && authStatus.youtube;
-  const isBackendConfigured =
-    backendStatus?.spotify_configured && backendStatus?.youtube_configured;
+
+  // Add useEffect for heartbeat animation
+  useEffect(() => {
+    if (canProceed) {
+      const heartbeat = gsap.timeline({ repeat: -1 });
+      heartbeat
+        .to(".heartbeat-text", {
+          opacity: 0.3,
+          duration: 1.5,
+          ease: "power2.inOut"
+        })
+        .to(".heartbeat-text", {
+          opacity: 1,
+          duration: 1.5,
+          ease: "power2.inOut"
+        });
+      
+      return () => heartbeat.kill();
+    }
+  }, [canProceed]);
 
   return (
     <section ref={heroRef} className="pt-32 pb-24 px-4 lg:px-16 md:pt-40 md:pb-32">
@@ -185,129 +264,118 @@ export default function Hero() {
             playlists.
           </p>
 
-          {/* Development-only sections */}
-          {process.env.NODE_ENV === "development" && (
-            <>
-              {/* Authentication Status */}
-              {(authStatus.spotify || authStatus.youtube) && (
-                <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                  <h3 className="text-white font-medium mb-2">
-                    Connected Accounts:
-                  </h3>
-                  <div className="flex gap-4">
-                    {authStatus.spotify && (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <Check size={16} />
-                        <span>Spotify Connected</span>
-                        <button
-                          className="text-xs text-gray-400 hover:text-white ml-2"
-                          onClick={() => handleLogout("spotify")}
-                        >
-                          (logout)
-                        </button>
-                      </div>
-                    )}
-                    {authStatus.youtube && (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <Check size={16} />
-                        <span>YouTube Connected</span>
-                        <button
-                          className="text-xs text-gray-400 hover:text-white ml-2"
-                          onClick={() => handleLogout("youtube")}
-                        >
-                          (logout)
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          {/* Celebration Animation - Fixed spacing */}
+          <div ref={celebrationRef} className="relative mb-6 flex justify-center h-0">
+            {canProceed && (
+              <div className="celebration-text absolute flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-md rounded-full border border-green-500/30 -top-12">
+                <Sparkles className="text-yellow-400 animate-pulse" size={20} />
+                <span className="text-white font-medium">All Set! Ready to transfer your playlists</span>
+                <Sparkles className="text-yellow-400 animate-pulse" size={20} />
+              </div>
+            )}
+          </div>
 
           <div
             className="hero-buttons flex flex-col sm:flex-row gap-4"
             id="get-started"
           >
-            <Button
-              className="group flex items-center gap-2"
-              color="success"
-              // isDisabled={authStatus.spotify || !isBackendConfigured}
-              isLoading={isLoading.spotify}
-              size="lg"
-              startContent={
-                authStatus.spotify ? (
-                  <Check
-                    className="group-hover:scale-110 transition-transform"
-                    size={20}
-                  />
-                ) : (
+            {/* Spotify Button */}
+            <div className="flex rounded-lg overflow-hidden">
+              {authStatus.spotify ? (
+                // Connected State - Side by Side Buttons
+                <>
+                  <Button
+                    className="flex-1 rounded-none border-r-0 pointer-events-non"
+                    color="success"
+                    size="lg"
+                    variant="solid"
+                    disabled
+                  >
+                    <div className="flex items-center gap-2">
+                      <Check size={20} />
+                      <span>Spotify Connected</span>
+                    </div>
+                  </Button>
+                  <Button
+                    className="w-8 px-1 rounded-none bg-gray-500/20 backdrop-blur-sm hover:bg-yellow-500/10 transition-colors"
+                    size="lg"
+                    variant="ghost"
+                    onPress={() => handleLogout("spotify")}
+                    title="Logout from Spotify"
+                  >
+                    <LogOut size={20} className="text-yellow-400" />
+                  </Button>
+                </>
+              ) : (
+                // Not Connected State
+                <Button
+                  className="group flex items-center gap-2 w-full rounded-lg"
+                  color="success"
+                  isLoading={isLoading.spotify}
+                  size="lg"
+                  variant="shadow"
+                  onPress={handleSpotifyLogin}
+                >
                   <SpotifyIcon
                     className="group-hover:scale-110 transition-transform"
                     size={20}
                   />
-                )
-              }
-              variant={authStatus.spotify ? "solid" : "shadow"}
-              onPress={authStatus.spotify ? undefined : handleSpotifyLogin}
-            >
-              {authStatus.spotify ? "Spotify Connected" : "Login with Spotify"}
-            </Button>
+                  <span>Login with Spotify</span>
+                </Button>
+              )}
+            </div>
 
-            <Button
-              className="group flex items-center gap-2"
-              color="danger"
-              // isDisabled={authStatus.youtube || !isBackendConfigured}
-              isLoading={isLoading.youtube}
-              size="lg"
-              startContent={
-                authStatus.youtube ? (
-                  <Check
-                    className="group-hover:scale-110 transition-transform"
-                    size={20}
-                  />
-                ) : (
+            {/* YouTube Button */}
+            <div className="flex rounded-lg overflow-hidden">
+              {authStatus.youtube ? (
+                // Connected State - Side by Side Buttons
+                <>
+                  <Button
+                    className="flex-1 rounded-none border-r-0 pointer-events-non"
+                    color="danger"
+                    size="lg"
+                    variant="solid"
+                    disabled
+                  >
+                    <div className="flex items-center gap-2">
+                      <Check size={20} />
+                      <span>YouTube Connected</span>
+                    </div>
+                  </Button>
+                  <Button
+                    className="w-8 px-1 rounded-none bg-gray-500/20 backdrop-blur-sm hover:bg-yellow-500/10 transition-colors"
+                    size="lg"
+                    variant="ghost"
+                    onPress={() => handleLogout("youtube")}
+                    title="Logout from YouTube"
+                  >
+                    <LogOut size={20} className="text-yellow-400" />
+                  </Button>
+                </>
+              ) : (
+                // Not Connected State
+                <Button
+                  className="group flex items-center gap-2 w-full rounded-lg"
+                  color="danger"
+                  isLoading={isLoading.youtube}
+                  size="lg"
+                  variant="shadow"
+                  onPress={handleYouTubeLogin}
+                >
                   <TvMinimalPlay
                     className="group-hover:scale-110 transition-transform"
                     size={20}
                   />
-                )
-              }
-              variant={authStatus.youtube ? "solid" : "shadow"}
-              onPress={authStatus.youtube ? undefined : handleYouTubeLogin}
-            >
-              {authStatus.youtube ? "YouTube Connected" : "Login with YouTube"}
-            </Button>
+                  <span>Login with YouTube</span>
+                </Button>
+              )}
+            </div>
           </div>
 
-          {/* Proceed Button */}
-          {canProceed && (
-            <div className="mt-6">
-              <Button
-                className="w-full sm:w-auto"
-                color="primary"
-                size="lg"
-                variant="shadow"
-                onPress={() => (window.location.href = "/get-started")}
-              >
-                Start Transferring Playlists
-              </Button>
-            </div>
-          )}
-
           {/* Help Text */}
-          <p className="text-gray-400 text-sm mt-4">
-            {!isBackendConfigured &&
-              "Please configure OAuth in your backend first"}
-            {isBackendConfigured &&
-              !authStatus.spotify &&
-              !authStatus.youtube &&
-              "Connect both accounts to start transferring your playlists"}
-            {isBackendConfigured &&
-              (authStatus.spotify || authStatus.youtube) &&
-              !canProceed &&
-              "Connect your remaining account to continue"}
-            {canProceed && "All set! You can now transfer your playlists"}
+          <p className={`text-gray-400 text-sm mt-4 mb-12 lg:mb-0 ${canProceed ? 'heartbeat-text' : ''}`}>
+            {!canProceed && "Connect both accounts to start transferring your playlists"}
+            {canProceed && "Head to Get Started in the navigation to begin transferring!"}
           </p>
         </div>
 
@@ -323,7 +391,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="container mx-auto max-w-6xl mt-16 text-center">
+      <div className="container mx-auto max-w-6xl mt-20 text-center">
         <div className="inline-flex gap-2 items-center px-4 py-2 bg-gray-800/50 rounded-full border border-gray-700">
           <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
           <p className="text-sm">
@@ -333,34 +401,31 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Development Debug Info */}
+      {/* Development Debug Info - Consolidated */}
       {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto max-w-6xl mt-8">
           <div className="p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
             <h4 className="text-yellow-400 font-medium mb-2">OAuth Debug Info</h4>
+            
+            {/* Technical Debug Info */}
             <div className="text-xs text-gray-400 space-y-1">
               <p>
-                Spotify Client ID:{" "}
-                {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
+                Spotify Client ID: {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
               </p>
               <p>
-                Google Client ID:{" "}
-                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
+                Google Client ID: {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
               </p>
               <p>
-                Backend Status:{" "}
-                {backendStatus ? JSON.stringify(backendStatus) : "Loading..."}
+                Spotify Account: {authStatus.spotify ? "Connected" : "Not Connected"}
               </p>
               <p>
-                Auth Status: Spotify=
-                {authStatus.spotify ? "Yes" : "No"}, YouTube=
-                {authStatus.youtube ? "Yes" : "No"}
+                YouTube Account: {authStatus.youtube ? "Connected" : "Not Connected"}
               </p>
               <p>
-                Current Origin:{" "}
-                {typeof window !== "undefined"
-                  ? window.location.origin
-                  : "Server"}
+                Backend Status: {backendStatus ? JSON.stringify(backendStatus) : "Loading..."}
+              </p>
+              <p>
+                Current Origin: {typeof window !== "undefined" ? window.location.origin : "Server"}
               </p>
             </div>
           </div>

@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 import json
 from typing import Dict, Any
+from dotenv import load_dotenv
+from pathlib import Path
 
 from backend.models.oauth import (
     OAuthCallbackRequest, 
@@ -15,7 +17,10 @@ from backend.models.oauth import (
     OAuthError
 )
 
+
 router = APIRouter()
+backend_dir = Path(__file__).parent.parent.resolve()
+load_dotenv(backend_dir / ".env")
 
 @router.post("/spotify/callback", response_model=SpotifyTokenResponse)
 async def spotify_oauth_callback(request: OAuthCallbackRequest):
@@ -108,15 +113,25 @@ async def youtube_oauth_callback(request: OAuthCallbackRequest):
     try:
         print(f"[YouTubeOAuth] - Received callback request: code={request.code[:10]}..., redirect_uri={request.redirect_uri}")
         
-        # Load Google client secrets
-        google_secrets_path = os.getenv("YOUTUBE_CLIENT_JSON")
-        if not google_secrets_path or not os.path.exists(google_secrets_path):
+        # Load Google client secrets (resolve relative paths to backend_dir)
+        google_secrets_env = os.getenv("YOUTUBE_CLIENT_JSON")
+        if not google_secrets_env:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Google client secrets file not found"
+                detail="Google client secrets file not configured"
             )
-        
-        with open(google_secrets_path, 'r') as f:
+
+        client_json_path = Path(google_secrets_env)
+        if not client_json_path.is_absolute():
+            client_json_path = backend_dir / client_json_path
+
+        if not client_json_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Google client secrets file not found: {client_json_path}"
+            )
+
+        with open(client_json_path, 'r', encoding='utf-8') as f:
             google_secrets = json.load(f)
         
         client_info = google_secrets.get("web") or google_secrets.get("installed")
