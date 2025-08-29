@@ -16,6 +16,7 @@ import {
   TransferResultResponseProps,
   PlaylistTransferRequestProps,
 } from "@/types";
+import { useLogger } from "@/utils/useLogger";
 
 type TransferStep = "form" | "progress" | "results";
 
@@ -30,6 +31,7 @@ export default function GetStarted() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const router = useRouter();
+  const logger = useLogger("components/get-started/GetStarted");
 
   useEffect(() => {
     const animatePageElements = () => {
@@ -83,16 +85,16 @@ export default function GetStarted() {
       setIsTransferring(true);
       setCurrentStep("progress");
 
-      console.log("Starting transfer with data:", data);
+      logger.info("Starting transfer with data:", data);
 
       const results = await transferAPI.directTransfer(data);
 
-      console.log("✅ Transfer completed:", results);
+      logger.success("✅ Transfer completed:", results);
 
       setTransferResults(results);
       setCurrentStep("results");
     } catch (error) {
-      console.error("[GetStarted] - Transfer failed:", error);
+      logger.error("[GetStarted] - Transfer failed:", error);
 
       if (axios.isAxiosError(error)) {
         const errorMessage =
@@ -112,7 +114,7 @@ export default function GetStarted() {
   };
 
   const handleStartOver = () => {
-    console.log("[GetStarted] - Starting over - resetting all state");
+    logger.log("[GetStarted] - Starting over - resetting all state");
 
     // Kill all GSAP animations first
     gsap.killTweensOf("*");
@@ -129,7 +131,7 @@ export default function GetStarted() {
     window.scrollTo(0, 0);
 
     // Debug log
-    console.log("[GetStarted] - State after reset:", {
+    logger.info("[GetStarted] - State after reset:", {
       currentStep: "form",
       formKey: formKey + 1,
       playlistData: null,
@@ -138,7 +140,7 @@ export default function GetStarted() {
   };
 
   const getStepTitle = () => {
-    console.log(
+    logger.info(
       "[GetStarted] - Current step:",
       currentStep,
       "Form key:",

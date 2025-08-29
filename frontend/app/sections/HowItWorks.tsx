@@ -9,17 +9,21 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SpotifyIcon } from "@/components/icons";
 import { playlistDescription } from "@/utils/site";
 import { killAnimations } from "@/utils/cleaning_animations";
+import { useLogger } from "@/utils/useLogger";
 
 export default function HowItWorks() {
+  // instantiate logger
+  const logger = useLogger("sections/HowItWorks");
+
   useEffect(() => {
-    console.log("[HowItWorks] - Component mounted/remounted");
+    logger.log("[HowItWorks] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
     // Check if animation has already played in this session
     const hasPlayedAnimation = sessionStorage.getItem("howItWorksAnimated");
 
     if (hasPlayedAnimation) {
-      console.log(
+      logger.log(
         "[HowItWorks] - Animation already played this session, skipping",
       );
 
@@ -31,7 +35,7 @@ export default function HowItWorks() {
       const steps = document.querySelectorAll(".step-card");
 
       if (steps.length > 0) {
-        console.log(`[HowItWorks] - Animating ${steps.length} step cards`);
+        logger.info(`[HowItWorks] - Animating ${steps.length} step cards`);
 
         steps.forEach((step, index) => {
           // Reset element state first
@@ -70,7 +74,7 @@ export default function HowItWorks() {
     // Cleanup function
     return () => {
       clearTimeout(timeoutId);
-      console.log("[HowItWorks] - Cleaning up animations");
+      logger.log("[HowItWorks] - Cleaning up animations");
       killAnimations("step-card");
     };
   }, []);

@@ -21,6 +21,7 @@ import {
 import { gsap } from "gsap";
 
 import { PlaylistDataProps, PlaylistFormProps } from "@/types";
+import { useLogger } from "@/utils/useLogger";
 
 export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -43,9 +44,10 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     "unknown" | "connected" | "disconnected"
   >("unknown");
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const logger = useLogger("components/get-started/PlaylistForm");
 
   useEffect(() => {
-    console.log("[PlaylistForm] - Component mounted/remounted");
+    logger.log("[PlaylistForm] - Component mounted/remounted");
 
     // Force reset with new object reference
     setFormData(createInitialFormData());
@@ -89,7 +91,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   }, []); // Remove dependencies to only run on mount
 
   const testBackendConnection = async () => {
-    console.log("[PlaylistForm] - Testing backend connection...");
+    logger.log("[PlaylistForm] - Testing backend connection...");
     setIsTestingConnection(true);
     try {
       const response = await fetch("http://localhost:8000/", {
@@ -102,17 +104,17 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
       if (response.ok) {
         const data = await response.json();
 
-        console.log("[PlaylistForm] - Backend connected:", data);
+        logger.success("[PlaylistForm] - Backend connected:", data);
         setBackendStatus("connected");
       } else {
-        console.error(
+        logger.error(
           "[PlaylistForm] - Backend returned error:",
           response.status,
         );
         setBackendStatus("disconnected");
       }
     } catch (error) {
-      console.error("[PlaylistForm] - Backend connection failed:", error);
+      logger.error("[PlaylistForm] - Backend connection failed:", error);
       setBackendStatus("disconnected");
     } finally {
       setIsTestingConnection(false);
@@ -120,7 +122,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
   };
 
   const validateForm = async (): Promise<boolean> => {
-    console.log("[PlaylistForm] - Validating form data:", formData);
+    logger.info("[PlaylistForm] - Validating form data:", formData);
     const newErrors: Partial<PlaylistDataProps> = {};
 
     if (!formData.url.trim()) {
@@ -137,7 +139,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
     const isValid = Object.keys(newErrors).length === 0;
 
-    console.log("[PlaylistForm] - Form validation result:", isValid, newErrors);
+    logger.info("[PlaylistForm] - Form validation result:", isValid, newErrors);
 
     return isValid;
   };
@@ -152,11 +154,11 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[PlaylistForm] - Form submitted with data:", formData);
+    logger.success("[PlaylistForm] - Form submitted with data:", formData);
 
     // Check backend connection before submitting
     if (backendStatus !== "connected") {
-      console.error("[PlaylistForm] - Backend not connected, aborting submit");
+      logger.error("[PlaylistForm] - Backend not connected, aborting submit");
       setErrors({
         url: "Backend server is not connected. Please check if your FastAPI server is running.",
       });
@@ -167,7 +169,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     const isValid = await validateForm();
 
     if (!isValid) {
-      console.error("[PlaylistForm] - Form validation failed, aborting submit");
+      logger.error("[PlaylistForm] - Form validation failed, aborting submit");
 
       return;
     }
@@ -187,7 +189,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     }
 
     setTimeout(() => {
-      console.log("[PlaylistForm] - Calling onSubmit with data:", formData);
+      logger.info("[PlaylistForm] - Calling onSubmit with data:", formData);
       onSubmit(formData);
     }, 500);
   };
@@ -196,7 +198,7 @@ export default function PlaylistForm({ onSubmit }: PlaylistFormProps) {
     field: keyof PlaylistDataProps,
     value: string | boolean,
   ) => {
-    console.log(`[PlaylistForm] - Input changed: ${field} = ${value}`);
+    logger.log(`[PlaylistForm] - Input changed: ${field} = ${value}`);
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear error when user starts typing

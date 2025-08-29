@@ -6,6 +6,7 @@ import { Card, CardBody, Spinner } from "@heroui/react";
 import { CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 
 import { callbackHandlers } from "@/utils/api_routes.ts/api";
+import { useLogger } from "@/utils/useLogger";
 
 export default function YouTubeCallback() {
   const searchParams = useSearchParams();
@@ -16,8 +17,10 @@ export default function YouTubeCallback() {
     "Processing YouTube authentication...",
   );
 
+  const logger = useLogger("Hero");
+
   useEffect(() => {
-    console.log("[YouTubeCallback] - Component mounted");
+    logger.log("[YouTubeCallback] - Component mounted");
     handleCallback();
   }, []);
 
@@ -34,19 +37,19 @@ export default function YouTubeCallback() {
       // Redirect back to home page after 2 seconds on success
       if (result.status === "success") {
         setTimeout(() => {
-          console.log("[YouTubeCallback] - Redirecting to home page");
+          logger.log("[YouTubeCallback] - Redirecting to home page");
           window.location.href = "/";
         }, 2000);
       }
     } catch (error) {
-      console.error("[YouTubeCallback] - Unexpected error:", error);
+      logger.error("[YouTubeCallback] - Unexpected error:", error);
       setStatus("error");
       setMessage("An unexpected error occurred");
     }
   };
 
   const handleGoBack = () => {
-    console.log("[YouTubeCallback] - User clicked go back");
+    logger.log("[YouTubeCallback] - User clicked go back");
     window.location.href = "/";
   };
 

@@ -5,10 +5,14 @@ import { TvMinimalPlay } from "lucide-react";
 import { SpotifyIcon } from "@/components/icons";
 import { siteConfig } from "@/utils/site";
 import Logo from "@/components/logo";
+import { useLogger } from "@/utils/useLogger";
 
 export default function Footer() {
+  // instantiate logger
+  const logger = useLogger("sections/Footer");
+
   const handleNavClick = (href: string) => {
-    console.log("[Footer] - Nav clicked:", href);
+    logger.info("[Footer] - Nav clicked:", href);
 
     // For anchor links on same page, scroll to section if on home page
     if (href.startsWith("/#")) {
@@ -34,7 +38,7 @@ export default function Footer() {
   };
 
   const handleLogoClick = () => {
-    console.log("[Footer] - Logo clicked, navigating to home");
+    logger.log("[Footer] - Logo clicked, navigating to home");
     window.location.href = "/";
   };
 

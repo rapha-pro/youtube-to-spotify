@@ -9,6 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { siteConfig } from "@/utils/site";
 import Logo from "@/components/logo";
+import { useLogger } from "@/utils/useLogger";
 
 const iconMap = {
   Sparkles: <Sparkles size={16} />,
@@ -19,9 +20,10 @@ const iconMap = {
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const router = useRouter();
+  const logger = useLogger("sections/Header");
 
   useEffect(() => {
-    console.log("[Header] - Component mounted/remounted");
+    logger.log("[Header] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
     // Kill any existing animations on this element first
@@ -51,7 +53,7 @@ export default function Header() {
   }, []); // Empty dependency array - only run on mount
 
   const handleGetStarted = () => {
-    console.log("[Header] - Navigating to get-started");
+    logger.log("[Header] - Navigating to get-started");
     // Kill animations before navigation
     if (headerRef.current) {
       gsap.killTweensOf(headerRef.current);
@@ -60,7 +62,7 @@ export default function Header() {
   };
 
   const handleLogoClick = () => {
-    console.log("[Header] - Logo clicked, navigating to home");
+    logger.log("[Header] - Logo clicked, navigating to home");
     // Kill animations before navigation
     if (headerRef.current) {
       gsap.killTweensOf(headerRef.current);
@@ -69,7 +71,7 @@ export default function Header() {
   };
 
   const handleNavClick = (href: string) => {
-    console.log("[Header] - Nav clicked:", href);
+    logger.info("[Header] - Nav clicked:", href);
     // Kill animations before navigation
     if (headerRef.current) {
       gsap.killTweensOf(headerRef.current);

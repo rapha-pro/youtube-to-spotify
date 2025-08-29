@@ -15,6 +15,7 @@ import {
 import { gsap } from "gsap";
 
 import { TransferResultResponseProps } from "@/types";
+import { useLogger } from "@/utils/useLogger";
 
 interface TransferResultsProps {
   results: TransferResultResponseProps;
@@ -28,36 +29,54 @@ export default function TransferResults({
   const containerRef = useRef<HTMLDivElement>(null);
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const logger = useLogger("components/get-started/TransferResults");
 
   useEffect(() => {
     // Reset GSAP context and clear any existing animations
     const ctx = gsap.context(() => {
       // Kill any existing animations on these elements
       gsap.killTweensOf([".success-header", ".stats-card", ".song-item"]);
-      
+
       // Reset elements to visible state first
-      gsap.set([".success-header", ".stats-card", ".song-item"], { 
+      gsap.set([".success-header", ".stats-card", ".song-item"], {
         opacity: 1,
         x: 0,
         y: 0,
         scale: 1,
-        clearProps: "all" 
+        clearProps: "all",
       });
 
       // Then animate them in
-      gsap.fromTo(".success-header",
+      gsap.fromTo(
+        ".success-header",
         { scale: 0.8, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 1, ease: "back.out(1.7)" }
+        { scale: 1, opacity: 1, duration: 1, ease: "back.out(1.7)" },
       );
 
-      gsap.fromTo(".stats-card",
+      gsap.fromTo(
+        ".stats-card",
         { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, delay: 0.3, ease: "power3.out" }
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.1,
+          delay: 0.3,
+          ease: "power3.out",
+        },
       );
 
-      gsap.fromTo(".song-item",
+      gsap.fromTo(
+        ".song-item",
         { x: -30, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.6, stagger: 0.05, delay: 0.6, ease: "power3.out" }
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.05,
+          delay: 0.6,
+          ease: "power3.out",
+        },
       );
     }, containerRef);
 
@@ -102,7 +121,7 @@ export default function TransferResults({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+      logger.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -324,10 +343,10 @@ export default function TransferResults({
                         {song.spotifyUrl && (
                           <Button
                             isIconOnly
+                            className="hover:bg-white/10"
                             size="sm"
                             title="Open in Spotify"
                             variant="ghost"
-                            className="hover:bg-white/10"
                             onPress={() =>
                               window.open(song.spotifyUrl, "_blank")
                             }
@@ -338,10 +357,10 @@ export default function TransferResults({
                         {song.youtubeUrl && (
                           <Button
                             isIconOnly
+                            className="hover:bg-white/10"
                             size="sm"
                             title="Open original YouTube video"
                             variant="ghost"
-                            className="hover:bg-white/10"
                             onPress={() =>
                               window.open(song.youtubeUrl, "_blank")
                             }
@@ -370,10 +389,10 @@ export default function TransferResults({
                       {song.youtubeUrl && (
                         <Button
                           isIconOnly
+                          className="hover:bg-white/10"
                           size="sm"
                           title="Open original YouTube video"
                           variant="ghost"
-                          className="hover:bg-white/10"
                           onPress={() => window.open(song.youtubeUrl, "_blank")}
                         >
                           <svg
@@ -428,11 +447,15 @@ export default function TransferResults({
             </div>
             <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-green-400 mb-1">Match Accuracy</p>
-              <p className="text-gray-200">{successRate}% of songs found successfully</p>
+              <p className="text-gray-200">
+                {successRate}% of songs found successfully
+              </p>
             </div>
             <div className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/40 backdrop-blur-sm">
               <p className="font-medium text-purple-400 mb-1">Total Duration</p>
-              <p className="text-gray-200">{formatDuration(results.transferDuration)}</p>
+              <p className="text-gray-200">
+                {formatDuration(results.transferDuration)}
+              </p>
             </div>
           </div>
         </CardBody>

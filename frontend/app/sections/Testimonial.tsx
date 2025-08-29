@@ -8,6 +8,7 @@ import clsx from "clsx";
 
 import { testimonials } from "@/utils/testimonials";
 import { killAnimations } from "@/utils/cleaning_animations";
+import { useLogger } from "@/utils/useLogger";
 
 export default function Testimonial() {
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -16,9 +17,12 @@ export default function Testimonial() {
   const [isAnimating, setIsAnimating] = useState(false);
   const currentTestimonial = testimonials[currentIndex];
 
+  // instantiate logger
+  const logger = useLogger("sections/Testimonial");
+
 
   useEffect(() => {
-    console.log("[Testimonial] - Component mounted/remounted");
+    logger.log("[Testimonial] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
     // Kill any existing animations and scroll triggers first
@@ -27,7 +31,7 @@ export default function Testimonial() {
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
       if (testimonialRef.current) {
-        console.log("[Testimonial] - Animating testimonial section");
+        logger.log("[Testimonial] - Animating testimonial section");
 
         // Reset element state first
         gsap.set(testimonialRef.current, {
@@ -58,7 +62,7 @@ export default function Testimonial() {
     // Cleanup function
     return () => {
       clearTimeout(timeoutId);
-      console.log("[Testimonial] - Cleaning up animations");
+      logger.log("[Testimonial] - Cleaning up animations");
       if (testimonialRef.current) {
         gsap.killTweensOf(testimonialRef.current);
         ScrollTrigger.getAll().forEach((trigger) => {
@@ -77,7 +81,7 @@ export default function Testimonial() {
   const changeTestimonial = (newIndex: number) => {
     if (isAnimating || newIndex === currentIndex) return;
 
-    console.log(`[Testimonial] - Changing from ${currentIndex} to ${newIndex}`);
+    logger.info(`[Testimonial] - Changing from ${currentIndex} to ${newIndex}`);
     setIsAnimating(true);
 
     if (!contentRef.current) return;
@@ -102,7 +106,7 @@ export default function Testimonial() {
             duration: 0.4,
             ease: "power2.out",
             onComplete: () => {
-              console.log(
+              logger.info(
                 `[Testimonial] - Animation complete for index ${newIndex}`,
               );
               setIsAnimating(false);

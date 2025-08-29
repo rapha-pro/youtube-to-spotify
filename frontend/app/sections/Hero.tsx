@@ -11,6 +11,7 @@ import Phone from "@/components/phone";
 import { authAPI, tokenManager, oauthFlow } from "@/utils/api_routes.ts/api";
 import { AuthStatus } from "@/types";
 import { killAnimations } from "@/utils/cleaning_animations";
+import { useLogger } from "@/utils/useLogger";
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -29,8 +30,11 @@ export default function Hero() {
     message: string;
   } | null>(null);
 
+  // instantiate logger
+  const logger = useLogger("sections/Hero");
+
   useEffect(() => {
-    console.log("[Hero] - Component mounted, checking auth status");
+    logger.log("[Hero] - Component mounted, checking auth status");
     gsap.registerPlugin(ScrollTrigger);
 
     // Check authentication status
@@ -40,7 +44,7 @@ export default function Hero() {
     const hasPlayedAnimation = sessionStorage.getItem("heroAnimated");
 
     if (hasPlayedAnimation) {
-      console.log("[Hero] - Animation already played this session, skipping");
+      logger.log("[Hero] - Animation already played this session, skipping");
 
       return;
     }
@@ -101,16 +105,13 @@ export default function Hero() {
 
     return () => {
       clearTimeout(timeoutId);
-      console.log("[Hero] - Cleaning up animations");
+      logger.log("[Hero] - Cleaning up animations");
 
-      [
-        "hero-title",
-        "hero-description",
-        "hero-buttons",
-        "hero-image",
-      ].forEach((selector) => {
-        killAnimations(selector);
-      });
+      ["hero-title", "hero-description", "hero-buttons", "hero-image"].forEach(
+        (selector) => {
+          killAnimations(selector);
+        },
+      );
     };
   }, []);
 
@@ -122,7 +123,7 @@ export default function Hero() {
       );
 
       if (hasPlayedCelebration) {
-        console.log(
+        logger.log(
           "[Hero] - Celebration animation already played this session, skipping",
         );
 
@@ -136,7 +137,7 @@ export default function Hero() {
   }, [authStatus.spotify, authStatus.youtube]);
 
   const triggerCelebration = () => {
-    console.log("[Hero] - Triggering celebration animation");
+    logger.log("[Hero] - Triggering celebration animation");
 
     // Create floating particles
     if (celebrationRef.current) {
@@ -189,7 +190,7 @@ export default function Hero() {
   };
 
   const checkAuthStatus = async () => {
-    console.log("[Hero] - Checking authentication status");
+    logger.log("[Hero] - Checking authentication status");
 
     // Check local storage for tokens
     const localAuthStatus = tokenManager.getAuthStatus();
@@ -201,33 +202,33 @@ export default function Hero() {
       const status = await authAPI.checkStatus();
 
       setBackendStatus(status);
-      console.log("[Hero] - Backend OAuth status:", status);
+      logger.info("[Hero] - Backend OAuth status:", status);
     } catch (error) {
-      console.error("[Hero] - Failed to check backend OAuth status:", error);
+      logger.error("[Hero] - Failed to check backend OAuth status:", error);
     }
   };
 
   const handleSpotifyLogin = async () => {
-    console.log("[Hero] - Starting Spotify OAuth flow");
+    logger.log("[Hero] - Starting Spotify OAuth flow");
     setIsLoading((prev) => ({ ...prev, spotify: true }));
 
     try {
       oauthFlow.startSpotifyAuth();
     } catch (error) {
-      console.error("[Hero] - Spotify OAuth error:", error);
+      logger.error("[Hero] - Spotify OAuth error:", error);
       setIsLoading((prev) => ({ ...prev, spotify: false }));
       alert("Failed to start Spotify login. Please check your configuration.");
     }
   };
 
   const handleYouTubeLogin = async () => {
-    console.log("[Hero] - Starting YouTube OAuth flow");
+    logger.log("[Hero] - Starting YouTube OAuth flow");
     setIsLoading((prev) => ({ ...prev, youtube: true }));
 
     try {
       oauthFlow.startYouTubeAuth();
     } catch (error) {
-      console.error("[Hero] - YouTube OAuth error:", error);
+      logger.error("[Hero] - YouTube OAuth error:", error);
       setIsLoading((prev) => ({ ...prev, youtube: false }));
       alert("Failed to start YouTube login. Please check your configuration.");
     }
@@ -241,7 +242,7 @@ export default function Hero() {
       event.stopPropagation(); // Prevent button click propagation
     }
 
-    console.log(`[Hero] - Logging out from ${service}`);
+    logger.info(`[Hero] - Logging out from ${service}`);
 
     if (service === "spotify") {
       tokenManager.clearSpotifyTokens();
