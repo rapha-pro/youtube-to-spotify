@@ -4,35 +4,17 @@ import { siteConfig } from "@/utils/site";
 import Logo from "@/components/logo";
 import { useLogger } from "@/utils/useLogger";
 import socialLinks from "@/utils/socialLinks";
+import { useRouter } from "next/navigation";
 
 export default function Footer() {
   // instantiate logger
   const logger = useLogger("sections/Footer");
+  const router = useRouter();
 
   const handleNavClick = (href: string) => {
     logger.info("[Footer] - Nav clicked:", href);
 
-    // For anchor links on same page, scroll to section if on home page
-    if (href.startsWith("/#")) {
-      const currentPath = window.location.pathname;
-
-      if (currentPath === "/") {
-        // If we're on home page, scroll to section
-        const sectionId = href.substring(2); // Remove "/#"
-        const element = document.getElementById(sectionId);
-
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-
-          return;
-        }
-      }
-      // If not on home page, navigate to home with anchor
-      window.location.href = href;
-    } else {
-      // For other pages, use window.location
-      window.location.href = href;
-    }
+    router.push(href);
   };
 
   const handleLogoClick = () => {
@@ -96,21 +78,21 @@ export default function Footer() {
           <div className="flex justify-center gap-6 mt-4">
             <button
               className="hover:text-gray-300 transition-colors"
-              onClick={() => handleNavClick("#")}
+              onClick={() => handleNavClick("/privacy")}
             >
               Privacy Policy
             </button>
             <button
               className="hover:text-gray-300 transition-colors"
-              onClick={() => handleNavClick("#")}
+              onClick={() => handleNavClick("/terms")}
             >
               Terms of Service
             </button>
             <button
               className="hover:text-gray-300 transition-colors"
-              onClick={() => handleNavClick("#")}
+              onClick={() => handleNavClick("/support")}
             >
-              Contact
+              Support
             </button>
           </div>
         </div>
