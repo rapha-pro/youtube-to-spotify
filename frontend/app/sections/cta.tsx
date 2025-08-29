@@ -1,9 +1,13 @@
 import { Button } from "@heroui/react";
-import { TvMinimalPlay } from "lucide-react";
-
-import { SpotifyIcon } from "@/components/icons";
+import { Rocket } from "lucide-react";
 
 export default function Cta() {
+  const handleStart = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="py-20 bg-gradient-to-b from-black to-gray-900">
       <div className="container mx-auto px-4 max-w-4xl text-center">
@@ -16,32 +20,19 @@ export default function Cta() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
-            className="group flex items-center gap-2"
-            color="success"
+            className="group flex items-center gap-2 bg-blue-600 hover:bg-blue-500"
+            color="primary"
             size="lg"
             startContent={
-              <SpotifyIcon
-                className="group-hover:scale-110 transition-transform"
+              <Rocket
+                className="group-hover:scale-110 transition-transform text-white"
                 size={20}
               />
             }
             variant="shadow"
+            onPress={handleStart}
           >
-            Login with Spotify
-          </Button>
-          <Button
-            className="group flex items-center gap-2"
-            color="danger"
-            size="lg"
-            startContent={
-              <TvMinimalPlay
-                className="group-hover:scale-110 transition-transform"
-                size={20}
-              />
-            }
-            variant="shadow"
-          >
-            Login with YouTube
+            Start
           </Button>
         </div>
       </div>

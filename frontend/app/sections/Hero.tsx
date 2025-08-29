@@ -413,9 +413,7 @@ export default function Hero() {
           </div>
 
           {/* Help Text */}
-          <p
-            className={`text-gray-400 text-sm mt-4 mb-12 lg:mb-0 ${canProceed ? "heartbeat-text" : ""}`}
-          >
+          <p className="text-gray-400 text-sm mt-4 mb-12 lg:mb-0 heartbeat-text">
             {!canProceed &&
               "Connect both accounts to start transferring your playlists"}
             {canProceed &&
@@ -456,20 +454,20 @@ export default function Hero() {
             {/* Technical Debug Info */}
             <div className="text-xs text-gray-400 space-y-1">
               <p>
-                Spotify Client ID:{" "}
-                {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
-              </p>
-              <p>
-                Google Client ID:{" "}
-                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
-              </p>
-              <p>
                 Spotify Account:{" "}
                 {authStatus.spotify ? "Connected" : "Not Connected"}
               </p>
               <p>
                 YouTube Account:{" "}
                 {authStatus.youtube ? "Connected" : "Not Connected"}
+              </p>
+              <p>
+                Spotify Client ID:{" "}
+                {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
+              </p>
+              <p>
+                Google Client ID:{" "}
+                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
               </p>
               <p>
                 Backend Status:{" "}

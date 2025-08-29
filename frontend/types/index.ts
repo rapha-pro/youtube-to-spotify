@@ -37,6 +37,7 @@ export interface LogoProps {
   classname?: string;
   size?: number;
   showText?: boolean;
+  showImage?: boolean;
 }
 
 export interface PlaylistTransferRequestProps {
