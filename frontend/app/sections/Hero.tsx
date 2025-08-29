@@ -281,9 +281,9 @@ export default function Hero() {
       ref={heroRef}
       className="pt-32 pb-24 px-4 lg:px-16 md:pt-40 md:pb-32"
     >
-      <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <div className="mx-auto w-full grid gap-12 items-center px-4 lg:grid-cols-[45%_1fr] lg:px-16 lg:max-w-7xl">
         <div>
-          <h1 className="hero-title text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6">
+          <h1 className="hero-title w-full text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6">
             <span className="block">Transfer Your</span>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-600">
               YouTube

@@ -105,14 +105,12 @@ export default function HowItWorks() {
               </div>
               <h3 className="text-2xl font-bold mb-3">Connect YouTube</h3>
               <p className="text-gray-400">
-                Login with your Google account so we can access your YouTube
-                playlists. You should see an alert like so:
+                Login with your Google account. You should see an alert like so:
                 <span className="italic text-gray-500 font-bold block mt-2 mb-1">
                   &quot;Syncwave wants to access your account.&quot;
                 </span>
-                Click Authorize. Do not worry, we never store your login info.
-                We only require We only require read-only access find your
-                playlists in your account.
+                Click Authorize. Do not worry, we only require read-only access
+                find your playlists in your account.
               </p>
             </div>
             <div className="md:col-span-3 order-1 md:order-2">

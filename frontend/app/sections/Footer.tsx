@@ -58,7 +58,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="flex gap-6 items-center mb-6 md:mb-0 mr-56">
+          <div className="flex gap-6 items-center mb-6 md:mb-0 lg:mr-56">
             {siteConfig.navItems.map((item) => (
               <button
                 key={item.href}

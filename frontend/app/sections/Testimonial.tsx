@@ -62,17 +62,10 @@ export default function Testimonial() {
     return () => {
       clearTimeout(timeoutId);
       logger.log("[Testimonial] - Cleaning up animations");
-      if (testimonialRef.current) {
-        gsap.killTweensOf(testimonialRef.current);
-        ScrollTrigger.getAll().forEach((trigger) => {
-          if (trigger.vars.trigger === testimonialRef.current) {
-            trigger.kill();
-          }
-        });
-      }
-      if (contentRef.current) {
-        gsap.killTweensOf(contentRef.current);
-      }
+
+      killAnimations(testimonialRef.current);
+
+      if (contentRef.current) gsap.killTweensOf(contentRef.current);
     };
   }, []);
 
@@ -104,9 +97,6 @@ export default function Testimonial() {
             duration: 0.4,
             ease: "power2.out",
             onComplete: () => {
-              logger.log(
-                `[Testimonial] - Animation complete for index ${newIndex}`,
-              );
               setIsAnimating(false);
             },
           },

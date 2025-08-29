@@ -20,7 +20,7 @@ export default function Cta() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
-            className="group flex items-center gap-2 bg-blue-600 hover:bg-blue-500"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 w-48 mx-auto"
             color="primary"
             size="lg"
             startContent={
