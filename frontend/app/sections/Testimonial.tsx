@@ -20,7 +20,6 @@ export default function Testimonial() {
   // instantiate logger
   const logger = useLogger("sections/Testimonial");
 
-
   useEffect(() => {
     logger.log("[Testimonial] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
@@ -81,7 +80,6 @@ export default function Testimonial() {
   const changeTestimonial = (newIndex: number) => {
     if (isAnimating || newIndex === currentIndex) return;
 
-    logger.info(`[Testimonial] - Changing from ${currentIndex} to ${newIndex}`);
     setIsAnimating(true);
 
     if (!contentRef.current) return;
@@ -106,7 +104,7 @@ export default function Testimonial() {
             duration: 0.4,
             ease: "power2.out",
             onComplete: () => {
-              logger.info(
+              logger.log(
                 `[Testimonial] - Animation complete for index ${newIndex}`,
               );
               setIsAnimating(false);
