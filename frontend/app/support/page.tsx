@@ -16,6 +16,7 @@ import { gsap } from "gsap";
 import { useRouter } from "next/navigation";
 
 import { emailAddress, twitterUsername } from "@/utils/socialLinks";
+import Logo from "@/components/logo";
 
 export default function Support() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,8 +115,21 @@ export default function Support() {
 
           <div className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center">
-                <Heart className="text-red-400" size={32} />
+              <div className="h-16 w-16 rounded-full bg-red-500/20 flex items-center justify-center group">
+                <div className="relative">
+                  {/* Outline Heart (default) */}
+                  <Heart
+                    className="text-red-400 group-hover:opacity-0 transition-opacity duration-200"
+                    fill="none"
+                    size={32}
+                  />
+                  {/* Filled Heart (on hover) */}
+                  <Heart
+                    className="absolute inset-0 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    fill="currentColor"
+                    size={32}
+                  />
+                </div>
               </div>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
@@ -273,8 +287,8 @@ export default function Support() {
                 testament to the power of making music more accessible across
                 platforms.
               </p>
-              <div className="mt-6">
-                <span className="text-3xl">🎵</span>
+              <div className="mt-6 justify-center flex">
+                <Logo height={12} showText={false} size={20} width={12} />
               </div>
             </div>
           </div>

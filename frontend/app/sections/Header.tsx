@@ -3,7 +3,13 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
-import { Sparkles, Workflow, HelpCircle, ArrowRight } from "lucide-react";
+import {
+  Sparkles,
+  Workflow,
+  HelpCircle,
+  ArrowRight,
+  Heart,
+} from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -95,6 +101,7 @@ export default function Header() {
         </button>
 
         <div className="hidden md:flex gap-6 items-center">
+          {/* Navigation Links */}
           {siteConfig.navItems.map((item) => (
             <button
               key={item.href}
@@ -105,6 +112,31 @@ export default function Header() {
               {item.label}
             </button>
           ))}
+
+          {/* Support Link with Heart Icon */}
+          <div className="ml-4 pl-4 border-l border-gray-600">
+            <button
+              className="flex items-center gap-2 text-gray-300 hover:text-red-400 transition-colors group"
+              title="Support Syncwave"
+              onClick={() => handleNavClick("/support")}
+            >
+              <div className="relative">
+                {/* Outline Heart (default) */}
+                <Heart
+                  className="text-red-500 group-hover:opacity-0 transition-opacity duration-200"
+                  fill="none"
+                  size={18}
+                />
+                {/* Filled Heart (on hover) */}
+                <Heart
+                  className="absolute inset-0 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  fill="currentColor"
+                  size={18}
+                />
+              </div>
+              <span className="text-sm font-medium">Support</span>
+            </button>
+          </div>
         </div>
 
         <Button

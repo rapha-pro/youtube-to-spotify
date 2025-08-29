@@ -18,7 +18,7 @@ export const siteConfig = {
       label: "FAQ",
       href: "/#faq",
       icon: "HelpCircle"
-    }
+    },
   ],
 };
 
