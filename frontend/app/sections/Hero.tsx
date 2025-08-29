@@ -10,6 +10,7 @@ import { SpotifyIcon } from "@/components/icons";
 import Phone from "@/components/phone";
 import { authAPI, tokenManager, oauthFlow } from "@/utils/api_routes.ts/api";
 import { AuthStatus } from "@/types";
+import { killAnimations } from "@/utils/cleaning_animations";
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -35,13 +36,14 @@ export default function Hero() {
     // Check authentication status
     checkAuthStatus();
 
-    // Kill any existing animations first
-    gsap.killTweensOf([
-      ".hero-title",
-      ".hero-description",
-      ".hero-buttons",
-      ".hero-image",
-    ]);
+    // Check if animation has already played in this session
+    const hasPlayedAnimation = sessionStorage.getItem("heroAnimated");
+
+    if (hasPlayedAnimation) {
+      console.log("[Hero] - Animation already played this session, skipping");
+
+      return;
+    }
 
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
@@ -92,33 +94,55 @@ export default function Hero() {
           ease: "elastic.out(1, 0.75)",
         },
       );
+
+      // Mark animation as played in session storage
+      sessionStorage.setItem("heroAnimated", "true");
     }, 100);
 
     return () => {
       clearTimeout(timeoutId);
-      gsap.killTweensOf([
-        ".hero-title",
-        ".hero-description",
-        ".hero-buttons",
-        ".hero-image",
-      ]);
+      console.log("[Hero] - Cleaning up animations");
+
+      [
+        "hero-title",
+        "hero-description",
+        "hero-buttons",
+        "hero-image",
+      ].forEach((selector) => {
+        killAnimations(selector);
+      });
     };
   }, []);
 
   // Trigger celebration animation when both accounts are connected
   useEffect(() => {
     if (authStatus.spotify && authStatus.youtube && celebrationRef.current) {
+      const hasPlayedCelebration = sessionStorage.getItem(
+        "heroAuthenticationCelebrationPlayed",
+      );
+
+      if (hasPlayedCelebration) {
+        console.log(
+          "[Hero] - Celebration animation already played this session, skipping",
+        );
+
+        return;
+      }
       triggerCelebration();
+
+      // Mark celebration as played in session storage to avoid repeating
+      sessionStorage.setItem("heroAuthenticationCelebrationPlayed", "true");
     }
   }, [authStatus.spotify, authStatus.youtube]);
 
   const triggerCelebration = () => {
     console.log("[Hero] - Triggering celebration animation");
-    
+
     // Create floating particles
     if (celebrationRef.current) {
       for (let i = 0; i < 15; i++) {
         const particle = document.createElement("div");
+
         particle.className = "absolute w-3 h-3 rounded-full opacity-0";
         particle.style.background = i % 2 === 0 ? "#22c55e" : "#3b82f6";
         particle.style.left = "50%";
@@ -140,11 +164,12 @@ export default function Hero() {
     }
 
     // Animate the celebration text
-    gsap.fromTo(".celebration-text", 
+    gsap.fromTo(
+      ".celebration-text",
       { scale: 0, opacity: 0, rotation: -10 },
-      { 
-        scale: 1, 
-        opacity: 1, 
+      {
+        scale: 1,
+        opacity: 1,
         rotation: 0,
         duration: 1,
         ease: "back.out(1.7)",
@@ -155,11 +180,11 @@ export default function Hero() {
               scale: 0.8,
               opacity: 0,
               duration: 0.5,
-              ease: "power2.in"
+              ease: "power2.in",
             });
           }, 3000);
-        }
-      }
+        },
+      },
     );
   };
 
@@ -168,11 +193,13 @@ export default function Hero() {
 
     // Check local storage for tokens
     const localAuthStatus = tokenManager.getAuthStatus();
+
     setAuthStatus(localAuthStatus);
 
     // Check backend OAuth configuration
     try {
       const status = await authAPI.checkStatus();
+
       setBackendStatus(status);
       console.log("[Hero] - Backend OAuth status:", status);
     } catch (error) {
@@ -206,11 +233,14 @@ export default function Hero() {
     }
   };
 
-  const handleLogout = (service: "spotify" | "youtube", event?: React.MouseEvent) => {
+  const handleLogout = (
+    service: "spotify" | "youtube",
+    event?: React.MouseEvent,
+  ) => {
     if (event) {
       event.stopPropagation(); // Prevent button click propagation
     }
-    
+
     console.log(`[Hero] - Logging out from ${service}`);
 
     if (service === "spotify") {
@@ -228,24 +258,28 @@ export default function Hero() {
   useEffect(() => {
     if (canProceed) {
       const heartbeat = gsap.timeline({ repeat: -1 });
+
       heartbeat
         .to(".heartbeat-text", {
           opacity: 0.3,
           duration: 1.5,
-          ease: "power2.inOut"
+          ease: "power2.inOut",
         })
         .to(".heartbeat-text", {
           opacity: 1,
           duration: 1.5,
-          ease: "power2.inOut"
+          ease: "power2.inOut",
         });
-      
+
       return () => heartbeat.kill();
     }
   }, [canProceed]);
 
   return (
-    <section ref={heroRef} className="pt-32 pb-24 px-4 lg:px-16 md:pt-40 md:pb-32">
+    <section
+      ref={heroRef}
+      className="pt-32 pb-24 px-4 lg:px-16 md:pt-40 md:pb-32"
+    >
       <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
         <div>
           <h1 className="hero-title text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6">
@@ -265,11 +299,16 @@ export default function Hero() {
           </p>
 
           {/* Celebration Animation - Fixed spacing */}
-          <div ref={celebrationRef} className="relative mb-6 flex justify-center h-0">
+          <div
+            ref={celebrationRef}
+            className="relative mb-6 flex justify-center h-0"
+          >
             {canProceed && (
               <div className="celebration-text absolute flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-md rounded-full border border-green-500/30 -top-12">
                 <Sparkles className="text-yellow-400 animate-pulse" size={20} />
-                <span className="text-white font-medium">All Set! Ready to transfer your playlists</span>
+                <span className="text-white font-medium">
+                  All Set! Ready to transfer your playlists
+                </span>
                 <Sparkles className="text-yellow-400 animate-pulse" size={20} />
               </div>
             )}
@@ -285,11 +324,11 @@ export default function Hero() {
                 // Connected State - Side by Side Buttons
                 <>
                   <Button
+                    disabled
                     className="flex-1 rounded-none border-r-0 pointer-events-non"
                     color="success"
                     size="lg"
                     variant="solid"
-                    disabled
                   >
                     <div className="flex items-center gap-2">
                       <Check size={20} />
@@ -299,11 +338,11 @@ export default function Hero() {
                   <Button
                     className="w-8 px-1 rounded-none bg-gray-500/20 backdrop-blur-sm hover:bg-yellow-500/10 transition-colors"
                     size="lg"
+                    title="Logout from Spotify"
                     variant="ghost"
                     onPress={() => handleLogout("spotify")}
-                    title="Logout from Spotify"
                   >
-                    <LogOut size={20} className="text-yellow-400" />
+                    <LogOut className="text-yellow-400" size={20} />
                   </Button>
                 </>
               ) : (
@@ -331,11 +370,11 @@ export default function Hero() {
                 // Connected State - Side by Side Buttons
                 <>
                   <Button
+                    disabled
                     className="flex-1 rounded-none border-r-0 pointer-events-non"
                     color="danger"
                     size="lg"
                     variant="solid"
-                    disabled
                   >
                     <div className="flex items-center gap-2">
                       <Check size={20} />
@@ -345,11 +384,11 @@ export default function Hero() {
                   <Button
                     className="w-8 px-1 rounded-none bg-gray-500/20 backdrop-blur-sm hover:bg-yellow-500/10 transition-colors"
                     size="lg"
+                    title="Logout from YouTube"
                     variant="ghost"
                     onPress={() => handleLogout("youtube")}
-                    title="Logout from YouTube"
                   >
-                    <LogOut size={20} className="text-yellow-400" />
+                    <LogOut className="text-yellow-400" size={20} />
                   </Button>
                 </>
               ) : (
@@ -373,9 +412,13 @@ export default function Hero() {
           </div>
 
           {/* Help Text */}
-          <p className={`text-gray-400 text-sm mt-4 mb-12 lg:mb-0 ${canProceed ? 'heartbeat-text' : ''}`}>
-            {!canProceed && "Connect both accounts to start transferring your playlists"}
-            {canProceed && "Head to Get Started in the navigation to begin transferring!"}
+          <p
+            className={`text-gray-400 text-sm mt-4 mb-12 lg:mb-0 ${canProceed ? "heartbeat-text" : ""}`}
+          >
+            {!canProceed &&
+              "Connect both accounts to start transferring your playlists"}
+            {canProceed &&
+              "Head to Get Started in the navigation to begin transferring!"}
           </p>
         </div>
 
@@ -405,27 +448,37 @@ export default function Hero() {
       {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto max-w-6xl mt-8">
           <div className="p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-            <h4 className="text-yellow-400 font-medium mb-2">OAuth Debug Info</h4>
-            
+            <h4 className="text-yellow-400 font-medium mb-2">
+              OAuth Debug Info
+            </h4>
+
             {/* Technical Debug Info */}
             <div className="text-xs text-gray-400 space-y-1">
               <p>
-                Spotify Client ID: {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
+                Spotify Client ID:{" "}
+                {process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID ? "Set" : "Missing"}
               </p>
               <p>
-                Google Client ID: {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
+                Google Client ID:{" "}
+                {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "Set" : "Missing"}
               </p>
               <p>
-                Spotify Account: {authStatus.spotify ? "Connected" : "Not Connected"}
+                Spotify Account:{" "}
+                {authStatus.spotify ? "Connected" : "Not Connected"}
               </p>
               <p>
-                YouTube Account: {authStatus.youtube ? "Connected" : "Not Connected"}
+                YouTube Account:{" "}
+                {authStatus.youtube ? "Connected" : "Not Connected"}
               </p>
               <p>
-                Backend Status: {backendStatus ? JSON.stringify(backendStatus) : "Loading..."}
+                Backend Status:{" "}
+                {backendStatus ? JSON.stringify(backendStatus) : "Loading..."}
               </p>
               <p>
-                Current Origin: {typeof window !== "undefined" ? window.location.origin : "Server"}
+                Current Origin:{" "}
+                {typeof window !== "undefined"
+                  ? window.location.origin
+                  : "Server"}
               </p>
             </div>
           </div>

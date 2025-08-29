@@ -65,8 +65,7 @@ export default function Header() {
     if (headerRef.current) {
       gsap.killTweensOf(headerRef.current);
     }
-    // Use window.location for more reliable navigation
-    window.location.href = "/";
+    router.push("/");
   };
 
   const handleNavClick = (href: string) => {
@@ -75,14 +74,7 @@ export default function Header() {
     if (headerRef.current) {
       gsap.killTweensOf(headerRef.current);
     }
-
-    // For anchor links on same page, use router
-    if (href.startsWith("/#")) {
-      router.push(href);
-    } else {
-      // For other pages, use window.location
-      window.location.href = href;
-    }
+    router.push(href);
   };
 
   return (

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
 import axios from "axios";
 
@@ -28,6 +29,7 @@ export default function GetStarted() {
   const [error, setError] = useState<string | null>(null);
   const [isTransferring, setIsTransferring] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     const animatePageElements = () => {
@@ -70,7 +72,8 @@ export default function GetStarted() {
 
   const handleBackToHome = () => {
     gsap.killTweensOf([".page-header", ".main-content"]);
-    window.location.href = "/";
+    // Next.js router for client-side navigation (no page refresh)
+    router.push("/");
   };
 
   const handleFormSubmit = async (data: PlaylistTransferRequestProps) => {
@@ -80,7 +83,7 @@ export default function GetStarted() {
       setIsTransferring(true);
       setCurrentStep("progress");
 
-      console.log("🚀 Starting transfer with data:", data);
+      console.log("Starting transfer with data:", data);
 
       const results = await transferAPI.directTransfer(data);
 
@@ -163,7 +166,7 @@ export default function GetStarted() {
 
       {/* Header */}
       <header className="page-header relative z-10 pt-8 pb-4 px-4">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-4xl pt-20">
           <Button
             className="group mb-6"
             startContent={

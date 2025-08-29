@@ -1,9 +1,4 @@
-import {
-  Music,
-  Rocket,
-  CheckCircle,
-  TvMinimalPlay,
-} from "lucide-react";
+import { Music, Rocket, CheckCircle, TvMinimalPlay } from "lucide-react";
 
 import { successfullTransferPercent } from "./site";
 

@@ -15,8 +15,16 @@ export default function Features() {
     console.log("[Features] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
-    // Kill any existing animations and scroll triggers first
-    killAnimations("feature-card");
+    // Check if animation has already played in this session
+    const hasPlayedAnimation = sessionStorage.getItem("featuresAnimated");
+
+    if (hasPlayedAnimation) {
+      console.log(
+        "[Features] - Animation already played this session, skipping",
+      );
+
+      return;
+    }
 
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
@@ -26,13 +34,6 @@ export default function Features() {
         console.log(`[Features] - Animating ${features.length} feature cards`);
 
         features.forEach((feature, index) => {
-          // Reset element state first
-          gsap.set(feature, {
-            y: 0,
-            opacity: 1,
-            clearProps: "transform,opacity",
-          });
-
           // Then animate from the desired start state
           gsap.fromTo(
             feature,
@@ -42,6 +43,7 @@ export default function Features() {
                 trigger: feature,
                 start: "top bottom-=100",
                 id: `feature-${index}`, // ID for easier debugging
+                once: true,
               },
               y: 0,
               opacity: 1,
@@ -51,13 +53,15 @@ export default function Features() {
             },
           );
         });
+
+        // Mark animation as played in session storage
+        sessionStorage.setItem("featuresAnimated", "true");
       }
     }, 100);
 
     // Cleanup function
     return () => {
       clearTimeout(timeoutId);
-      console.log("[Features] - Cleaning up animations");
       killAnimations("feature-card");
     };
   }, []);

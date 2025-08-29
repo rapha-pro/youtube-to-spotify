@@ -15,8 +15,16 @@ export default function HowItWorks() {
     console.log("[HowItWorks] - Component mounted/remounted");
     gsap.registerPlugin(ScrollTrigger);
 
-    // Kill any existing animations and scroll triggers first
-    killAnimations("step-card");
+    // Check if animation has already played in this session
+    const hasPlayedAnimation = sessionStorage.getItem("howItWorksAnimated");
+
+    if (hasPlayedAnimation) {
+      console.log(
+        "[HowItWorks] - Animation already played this session, skipping",
+      );
+
+      return;
+    }
 
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
@@ -53,6 +61,9 @@ export default function HowItWorks() {
             },
           );
         });
+
+        // Mark animation as played in session storage
+        sessionStorage.setItem("howItWorksAnimated", "true");
       }
     }, 200); // Longer delay for how-it-works since it's further down
 
